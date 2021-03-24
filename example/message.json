@@ -1,0 +1,10 @@
+{
+  "device": "DEVICE_1",
+  "operator": "OP_1",
+  "timestamp": 1234567,
+  "payload": {
+    "temperature": 18.2,
+    "humidity": 33.1,
+    "weight": 14.5
+  }
+}
