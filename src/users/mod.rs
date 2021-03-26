@@ -1,2 +1,2 @@
 pub mod author_builder;
-pub mod subscriber;
+pub mod subscriber_builder;
