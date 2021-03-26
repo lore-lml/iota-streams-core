@@ -11,7 +11,7 @@ use iota_streams::{
     app::transport::{
         TransportOptions,
         tangle::{
-            client::{Client as StreamsClient, SendTrytesOptions},
+            client::{Client as StreamsClient, SendOptions},
             PAYLOAD_BYTES,
         },
     },
@@ -39,7 +39,7 @@ impl Channel {
             Some(seed) => seed,
             None => random_seed(),
         };
-        let mut send_opt = SendTrytesOptions::default();
+        let mut send_opt = SendOptions::default();
         send_opt.min_weight_magnitude = mwm;
         send_opt.local_pow = local_pow;
 

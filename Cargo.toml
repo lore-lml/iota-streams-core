@@ -12,8 +12,8 @@ path= "src/lib.rs"
 
 [dependencies]
 anyhow = { version = "1.0", default-features = false }
-iota-streams = { git = "https://github.com/iotaledger/streams", branch = "develop" }
-tokio = { version = "^0.2", features = ["full"] }
+iota-streams = { git = "https://github.com/iotaledger/streams", branch = "chrysalis-2" } # commit develop = ffa921234a8c24aa82a9a61ecd1c6808bebaeaaf
+tokio = { version = "1.1", features = ["full"] }
 async-trait = "0.1.30"
 chrono = "0.4"
 serde = { version = "^1.0", features=["derive"] }

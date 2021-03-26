@@ -3,6 +3,7 @@
 ///
 extern crate rand;
 use rand::Rng;
+use iota_streams::app::transport::tangle::client::SendOptions;
 
 pub fn random_seed() -> String {
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ9";
@@ -17,4 +18,11 @@ pub fn random_seed() -> String {
         .collect();
 
     seed
+}
+
+pub fn create_send_option(min_weight_magnitude: u8, local_pow: bool) -> SendOptions{
+    let mut send_opt = SendOptions::default();
+    send_opt.min_weight_magnitude = min_weight_magnitude;
+    send_opt.local_pow = local_pow;
+    send_opt
 }
