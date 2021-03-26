@@ -108,9 +108,3 @@ impl Channel {
         self.channel_address.clone()
     }
 }
-
-impl Drop for Channel{
-    fn drop(&mut self) {
-        println!("");
-    }
-}

@@ -42,7 +42,7 @@ fn test_channel_create(){
 
     let author = AuthorBuilder::new()
         .send_options(send_opt)
-        .node(&node_url)
+        .node(node_url)
         .build()
         .unwrap();
 
