@@ -1,1 +1,1 @@
-pub mod channel_builder;
+pub mod tangle_channel;

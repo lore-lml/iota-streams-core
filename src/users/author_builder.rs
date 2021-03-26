@@ -1,10 +1,13 @@
-use anyhow::Result;
-use iota_streams::app::transport::tangle::client::{Client as StreamsClient, SendOptions};
-use iota_streams::app::transport::tangle::PAYLOAD_BYTES;
-use iota_streams::app::transport::TransportOptions;
+use iota_streams::app::transport::{
+    TransportOptions,
+    tangle::{
+        client::{Client as StreamsClient, SendOptions},
+        PAYLOAD_BYTES
+    }
+};
 use iota_streams::app_channels::api::tangle::Author;
-
 use crate::utility::iota_utility::random_seed;
+use anyhow::Result;
 
 pub struct AuthorBuilder{
     seed: String,
