@@ -6,7 +6,7 @@ use iota_streams::app::transport::{
     }
 };
 use iota_streams::app_channels::api::tangle::Author;
-use crate::utility::iota_utility::random_seed;
+use crate::utility::iota_utility::{random_seed, hash_string};
 use anyhow::Result;
 
 pub struct AuthorBuilder{
@@ -26,6 +26,26 @@ impl AuthorBuilder{
             multi_branching: false,
             send_options: SendOptions::default()
         }
+    }
+
+    pub fn build_from_state(author_state: &[u8],
+                            psw: &str,
+                            node_url: Option<&str>,
+                            send_option: Option<SendOptions>) -> Result<Author<StreamsClient>>{
+
+        let psw_hash = hash_string(psw).unwrap();
+        let node = match node_url {
+            Some(url) => url,
+            None => "https://api.lb-0.testnet.chrysalis2.com"
+        };
+        let options = match send_option {
+            Some(so) => so,
+            None => SendOptions::default()
+        };
+
+        let mut client = StreamsClient::new_from_url(&node);
+        client.set_send_options(options);
+        Author::import(author_state, &psw_hash, client)
     }
 }
 
@@ -50,7 +70,7 @@ impl AuthorBuilder{
         self
     }
 
-    pub fn build(mut self) -> Result<Author<StreamsClient>>{
+    pub fn build(self) -> Result<Author<StreamsClient>>{
         /*if self.seed != "" && !self.seed_ok(){
             return None;
         }else*/

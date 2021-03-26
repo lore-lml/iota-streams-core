@@ -1250,6 +1250,7 @@ dependencies = [
  "base64 0.12.3",
  "chrono",
  "failure",
+ "iota-crypto 0.4.2",
  "iota-streams",
  "rand 0.7.3",
  "serde",
