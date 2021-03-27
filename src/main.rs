@@ -8,6 +8,10 @@ use streams_core::{
 };
 use streams_core::users::author_builder::AuthorBuilder;
 use streams_core::utility::iota_utility::create_send_options;
+use streams_core::users::subscriber_builder::SubscriberBuilder;
+use iota_streams::app_channels::api::tangle::Address;
+use anyhow::Result;
+use streams_core::payload::payload_serializer::json::Payload;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Message {
@@ -34,7 +38,7 @@ fn get_message(device_id: &str) -> Message{
 }
 
 
-fn test_channel_create(){
+fn test_channel_create() -> Result<(String, String, String)>{
     let data: Message = get_message("DEVICE_1");
 
     let send_opt = create_send_options(9, false);
@@ -59,6 +63,7 @@ fn test_channel_create(){
     println!("data -> {:?}", &data);
 
     channel.export_to_file("mypsw", "example/channel_state.json");
+    Ok((channel_address, announce_id, msg_id))
 }
 
 fn test_restore_channel(){
@@ -87,8 +92,24 @@ fn test_restore_channel(){
     println!("data -> {:?}", &data);
 }
 
+pub fn test_get_messages_from_tangle(channel_address: &str, msg_id: &str, msg_id2: &str) -> Result<()>{
+    let send_opts = create_send_options(9, false);
+    let mut subscriber = SubscriberBuilder::new().send_options(send_opts).build().unwrap();
+    let link = Address::from_str(channel_address, msg_id).unwrap();
+    println!("Receiving announce");
+    subscriber.receive_announcement(&link)?;
+    println!("Announce received");
+
+    let msg_link = Address::from_str(channel_address, msg_id2).unwrap();
+    let (_, public_payload, _) = subscriber.receive_signed_packet(&msg_link)?;
+    let p_data: Message = Payload::unwrap_data(public_payload.0).unwrap();
+    println!("{:?}", p_data);
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() {
-    test_channel_create();
+    let (channel_address, announce_id, msg_id) = test_channel_create().unwrap();
     test_restore_channel();
+    test_get_messages_from_tangle(&channel_address, &announce_id, &msg_id).unwrap();
 }

@@ -51,14 +51,13 @@ impl<S> Payload<S>
     ///
     /// Unwrap JSON Data
     ///
-    pub fn unwrap_data(data: &str) -> failure::Fallible<Option<String>> {
-        let data_str = data.to_string();
-        if data_str.len() == 0 {
-            return Ok(None);
-        }
-        let raw = &data.to_string();
-        let decode_data = decode_config(&raw, URL_SAFE_NO_PAD)?;
-        Ok(Some(String::from_utf8(decode_data).unwrap()))
+    pub fn unwrap_data<T>(data: Vec<u8>) -> failure::Fallible<T>
+    where
+        T: DeserializeOwned
+    {
+        let str_data = String::from_utf8(data).unwrap();
+        let decoded_data = decode_config(str_data, URL_SAFE_NO_PAD)?;
+        S::deserialize_data(&decoded_data)
     }
 }
 
