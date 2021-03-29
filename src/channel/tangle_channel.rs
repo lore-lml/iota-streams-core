@@ -28,8 +28,8 @@ impl Channel {
     pub fn new(author: Author<StreamsClient>) -> Channel {
         let channel_address = author.channel_address().unwrap().to_string();
         Channel {
-            author: author,
-            channel_address: channel_address,
+            author,
+            channel_address,
             announcement_id: String::default(),
             previous_msg_id: String::default(),
         }
@@ -43,6 +43,7 @@ impl Channel {
             send_options
         )?;
         let channel_address = author.channel_address().unwrap().to_string();
+
         Ok(Channel {
             author,
             channel_address,
@@ -51,6 +52,9 @@ impl Channel {
         })
     }
 
+    ///
+    /// Restore the channel from a previously stored state in a file
+    ///
     pub fn import_from_file(file_path: &str, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<(ChannelState, Channel)>{
         let channel_state = ChannelState::from_file(file_path)?;
         let channel = Channel::import(&channel_state, psw, node_url, send_options)?;
@@ -99,12 +103,18 @@ impl Channel {
         Ok(ChannelState::new(&author_state, &self.announcement_id, &self.previous_msg_id))
     }
 
+    ///
+    /// Stores the channel state in a file. The author state is encrypted with the specified password
+    ///
     pub fn export_to_file(&self, psw: &str, file_path: &str)-> Result<()>{
         let channel_state = self.export(psw)?;
         channel_state.write_to_file(file_path);
         Ok(())
     }
 
+    ///
+    /// Get the channel address and the announcement id
+    ///
     pub fn channel_address(&self) -> (String, String){
         (self.channel_address.clone(), self.announcement_id.clone())
     }
