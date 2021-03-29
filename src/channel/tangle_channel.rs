@@ -3,12 +3,12 @@ use crate::payload::payload_serializer::{empty_bytes, json::PayloadBuilder, Pack
 use anyhow::Result;
 use iota_streams::{
     app::transport::tangle::client::{Client as StreamsClient, SendOptions},
-    app_channels::api::tangle::{Address, Author},
+    app_channels::api::tangle::Author,
 };
 
 use std::string::ToString;
 use crate::channel::channel_state::ChannelState;
-use crate::utility::iota_utility::hash_string;
+use crate::utility::iota_utility::{hash_string, create_link};
 use crate::users::author_builder::AuthorBuilder;
 
 ///
@@ -35,13 +35,13 @@ impl Channel {
         }
     }
 
-    pub fn import(channel_state: &ChannelState, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<Channel>{
+    fn import(channel_state: &ChannelState, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<Channel>{
         let author = AuthorBuilder::build_from_state(
             &channel_state.author_state(),
             psw,
             node_url,
             send_options
-        ).unwrap();
+        )?;
         let channel_address = author.channel_address().unwrap().to_string();
         Ok(Channel {
             author,
@@ -52,8 +52,8 @@ impl Channel {
     }
 
     pub fn import_from_file(file_path: &str, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<(ChannelState, Channel)>{
-        let channel_state = ChannelState::from_file(file_path).unwrap();
-        let channel = Channel::import(&channel_state, psw, node_url, send_options).unwrap();
+        let channel_state = ChannelState::from_file(file_path)?;
+        let channel = Channel::import(&channel_state, psw, node_url, send_options)?;
         Ok((channel_state, channel))
     }
 
@@ -75,10 +75,10 @@ impl Channel {
     {
         let payload = PayloadBuilder::new().public(&data).unwrap().build();
         let link_to = if self.previous_msg_id == String::default() {
-            Address::from_str(&self.channel_address, &self.announcement_id)
+            create_link(&self.channel_address, &self.announcement_id)
         }else {
-            Address::from_str(&self.channel_address, &self.previous_msg_id)
-        }.unwrap();
+            create_link(&self.channel_address, &self.previous_msg_id)
+        }?;
 
 
         let ret_link = self.author.send_signed_packet(
@@ -93,15 +93,16 @@ impl Channel {
         Ok(msg_id)
     }
 
-    pub fn export(&self, psw: &str) -> Result<ChannelState>{
-        let psw_hash = hash_string(psw).unwrap();
-        let author_state = self.author.export(&psw_hash).unwrap();
+    fn export(&self, psw: &str) -> Result<ChannelState>{
+        let psw_hash = hash_string(psw)?;
+        let author_state = self.author.export(&psw_hash)?;
         Ok(ChannelState::new(&author_state, &self.announcement_id, &self.previous_msg_id))
     }
 
-    pub fn export_to_file(&self, psw: &str, file_path: &str){
-        let channel_state = self.export(psw).unwrap();
+    pub fn export_to_file(&self, psw: &str, file_path: &str)-> Result<()>{
+        let channel_state = self.export(psw)?;
         channel_state.write_to_file(file_path);
+        Ok(())
     }
 
     pub fn channel_address(&self) -> (String, String){

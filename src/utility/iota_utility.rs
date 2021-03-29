@@ -1,9 +1,10 @@
 extern crate rand;
-use anyhow::Result;
+use anyhow::{Result, bail};
 use crypto::hashes::{blake2b, Digest};
 use iota_streams::app::transport::tangle::client::SendOptions;
 use iota_streams::core::prelude::hex;
 use rand::Rng;
+use iota_streams::app_channels::api::tangle::Address;
 
 ///
 /// Generates a new random String of 81 Chars of A..Z and 9
@@ -36,4 +37,11 @@ pub fn create_send_options(min_weight_magnitude: u8, local_pow: bool) -> SendOpt
 pub fn hash_string(string: &str) ->  Result<String>  {
     let hash = blake2b::Blake2b256::digest(&string.as_bytes());
     Ok(hex::encode(&hash))
+}
+
+pub fn create_link(channel_address: &str, msg_id: &str) -> Result<Address>{
+    match Address::from_str(channel_address, msg_id) {
+        Ok(link) => Ok(link),
+        Err(()) => bail!("Failed to create Address from {}:{}", channel_address, msg_id)
+    }
 }

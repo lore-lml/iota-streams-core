@@ -67,7 +67,7 @@ fn test_channel_create() -> Result<(String, String)>{
         send_signed_message(&mut channel, &device);
     }
 
-    channel.export_to_file("mypsw", "example/channel_state.json");
+    channel.export_to_file("mypsw", "example/channel_state.json")?;
     Ok((channel_address, announce_id))
 }
 

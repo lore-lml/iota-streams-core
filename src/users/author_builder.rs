@@ -13,7 +13,7 @@ pub struct AuthorBuilder{
     seed: String,
     node_url: String,
     encoding: String,
-    multi_branching: bool,
+    //multi_branching: bool,
     send_options: SendOptions
 }
 
@@ -23,7 +23,7 @@ impl AuthorBuilder{
             seed: random_seed(),
             node_url: "https://api.lb-0.testnet.chrysalis2.com".to_string(),
             encoding: "utf-8".to_string(),
-            multi_branching: false,
+            //multi_branching: false,
             send_options: SendOptions::default()
         }
     }
@@ -71,31 +71,13 @@ impl AuthorBuilder{
     }
 
     pub fn build(self) -> Result<Author<StreamsClient>>{
-        /*if self.seed != "" && !self.seed_ok(){
-            return None;
-        }else*/
-
         let mut client = StreamsClient::new_from_url(&self.node_url);
         client.set_send_options(self.send_options);
         let author = Author::new(&self.seed,
                                  &self.encoding,
                                  PAYLOAD_BYTES,
-                                 self.multi_branching,
+                                 false, //self.multi_branching,
                                  client);
         Ok(author)
     }
-
-    /*fn seed_ok(self) -> bool{
-        /*if self.seed != "" && self.seed.len() != 81 {
-            return false;
-        }*/
-
-        let char_set: Vec<char> = "9ABCDEFGHIJKLMNOPQRSTUVWXYZ".chars().collect();
-        let char_set: HashSet<char> = HashSet::from_iter(char_set.iter().cloned());
-
-        let found_char_set : Vec<char> = self.seed.clone().chars().collect();
-        let found_char_set : HashSet<char> = HashSet::from_iter(found_char_set.iter().cloned());
-
-        found_char_set.is_subset(&char_set)
-    }*/
 }
