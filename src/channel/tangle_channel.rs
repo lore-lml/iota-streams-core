@@ -19,7 +19,6 @@ pub struct Channel {
     channel_address: String,
     announcement_id: String,
     previous_msg_id: String,
-    //state_path: Option<String>
 }
 
 impl Channel {
@@ -81,6 +80,7 @@ impl Channel {
             Address::from_str(&self.channel_address, &self.previous_msg_id)
         }.unwrap();
 
+
         let ret_link = self.author.send_signed_packet(
             &link_to,
             &payload.public_data(),
@@ -104,7 +104,7 @@ impl Channel {
         channel_state.write_to_file(file_path);
     }
 
-    pub fn channel_address(&self) -> String{
-        self.channel_address.clone()
+    pub fn channel_address(&self) -> (String, String){
+        (self.channel_address.clone(), self.announcement_id.clone())
     }
 }

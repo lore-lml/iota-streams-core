@@ -54,10 +54,10 @@ impl SubscriberBuilder{
     pub fn build(self) -> Result<Subscriber<StreamsClient>>{
         let mut client = StreamsClient::new_from_url(&self.node_url);
         client.set_send_options(self.send_options);
-        let author = Subscriber::new(&self.seed,
+        let subscriber = Subscriber::new(&self.seed,
                                  &self.encoding,
                                  PAYLOAD_BYTES,
                                  client);
-        Ok(author)
+        Ok(subscriber)
     }
 }

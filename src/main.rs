@@ -9,9 +9,9 @@ use streams_core::{
 use streams_core::users::author_builder::AuthorBuilder;
 use streams_core::utility::iota_utility::create_send_options;
 use streams_core::users::subscriber_builder::SubscriberBuilder;
-use iota_streams::app_channels::api::tangle::Address;
-use anyhow::Result;
+use anyhow::{Result};
 use streams_core::payload::payload_serializer::json::Payload;
+use streams_core::channel::tangle_channel_reader::ChannelReader;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Message {
@@ -37,10 +37,17 @@ fn get_message(device_id: &str) -> Message{
     data
 }
 
+fn send_signed_message(channel: &mut Channel, device_id: &str){
+    println!("Sending message ...");
+    let data: Message = get_message(device_id);
+    let msg_id = channel.write_signed(&data).unwrap();
+    println!("... Message sent:");
+    println!("id -> {}", msg_id);
+    println!("data -> {:?}\n\n", &data);
+}
 
-fn test_channel_create() -> Result<(String, String, String)>{
-    let data: Message = get_message("DEVICE_1");
 
+fn test_channel_create() -> Result<(String, String)>{
     let send_opt = create_send_options(9, false);
     let node_url = "https://api.lb-0.testnet.chrysalis2.com";
 
@@ -53,63 +60,69 @@ fn test_channel_create() -> Result<(String, String, String)>{
     let mut channel: Channel = Channel::new(author);
     let (channel_address, announce_id) = channel.open().unwrap();
 
-    println!("Channel Address: {}", &channel_address);
-    println!("MsgId: {}", &announce_id);
-    println!("Sending message ...");
+    println!("Channel: {}:{}", &channel_address, &announce_id);
 
-    let msg_id = channel.write_signed(&data).unwrap();
-    println!("... Message sent:");
-    println!("id -> {}", msg_id);
-    println!("data -> {:?}", &data);
+    for i in 1..=2{
+        let device = format!("DEVICE_{}", i);
+        send_signed_message(&mut channel, &device);
+    }
 
     channel.export_to_file("mypsw", "example/channel_state.json");
-    Ok((channel_address, announce_id, msg_id))
+    Ok((channel_address, announce_id))
 }
 
-fn test_restore_channel(){
+fn test_restore_channel() -> Result<()>{
     let send_opt = create_send_options(9, false);
     let node = "https://api.lb-0.testnet.chrysalis2.com";
 
-    println!("\n\nRestoring Channel ...");
-
+    println!("Restoring Channel ...");
     let (_, mut channel) = Channel::import_from_file(
         "example/channel_state.json",
         "mypsw",
         Some(node),
         Some(send_opt)
-    ).unwrap();
-
+    )?;
     println!("... Channel Restored");
 
-    let data = get_message("DEVICE_2");
-    let channel_address = channel.channel_address();
-    println!("Channel Address: {}", &channel_address);
-    println!("Sending message ...");
+    let (channel_address, announce_id)= channel.channel_address();
+    println!("Channel: {}:{}", &channel_address, announce_id);
 
-    let msg_id = channel.write_signed(&data).unwrap();
-    println!("... Message sent:");
-    println!("id -> {}", msg_id);
-    println!("data -> {:?}", &data);
+    send_signed_message(&mut channel, "DEVICE_3");
+    Ok(())
 }
 
-pub fn test_get_messages_from_tangle(channel_address: &str, msg_id: &str, msg_id2: &str) -> Result<()>{
+pub fn test_get_messages_from_tangle(channel_address: &str, announce_id: &str) -> Result<()>{
     let send_opts = create_send_options(9, false);
-    let mut subscriber = SubscriberBuilder::new().send_options(send_opts).build().unwrap();
-    let link = Address::from_str(channel_address, msg_id).unwrap();
-    println!("Receiving announce");
-    subscriber.receive_announcement(&link)?;
-    println!("Announce received");
+    let subscriber = SubscriberBuilder::new().send_options(send_opts).build().unwrap();
 
-    let msg_link = Address::from_str(channel_address, msg_id2).unwrap();
-    let (_, public_payload, _) = subscriber.receive_signed_packet(&msg_link)?;
-    let p_data: Message = Payload::unwrap_data(public_payload.0).unwrap();
-    println!("{:?}", p_data);
+    println!("Receiving announce");
+    let mut channel_reader = ChannelReader::new(subscriber, channel_address, announce_id);
+    channel_reader.open()?;
+    println!("Announce received");
+    let (channel_address, announce_id) = channel_reader.channel_address();
+    println!("Channel: {}:{}\n", channel_address, announce_id);
+
+    println!("Getting messages ... ");
+    let msgs = channel_reader.fetch_remaining_msgs();
+    for m in msgs {
+        let address = m.0;
+        let data: Message = Payload::unwrap_data(m.1).unwrap();
+        println!("\nMessage {}:\n{:?}\n", address, data);
+    }
+    println!("... No more messages\n\n");
     Ok(())
+}
+
+fn start_test() -> Result<()>{
+    let (channel_address, announce_id) = test_channel_create()?;
+    test_restore_channel()?;
+    test_get_messages_from_tangle(&channel_address, &announce_id)
 }
 
 #[tokio::main]
 async fn main() {
-    let (channel_address, announce_id, msg_id) = test_channel_create().unwrap();
-    test_restore_channel();
-    test_get_messages_from_tangle(&channel_address, &announce_id, &msg_id).unwrap();
+    match start_test() {
+        Ok(_) => println!("\n******************** Everything has worked ********************"),
+        Err(_) => println!("\n******************** Something went wrong ********************")
+    }
 }

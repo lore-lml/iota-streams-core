@@ -1,6 +1,3 @@
-//!
-//! Channel Library
-//!
 #![deny(
 bad_style,
 trivial_casts,
