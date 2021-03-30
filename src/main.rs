@@ -3,7 +3,7 @@ use std::fs::File;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use streams_core::{
+use iota_streams_lib::{
     channel::{
         tangle_channel::Channel,
         tangle_channel_reader::ChannelReader

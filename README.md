@@ -1,4 +1,4 @@
-# Iota Streams-Core
+# Iota Streams-Lib
 
 ## Introdution
 This Repository provides the base API to open Channels and publish signed data to the Tangle using the `chrysalis-2` branch of iota-streams.<br><br>

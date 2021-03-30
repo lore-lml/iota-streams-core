@@ -1242,7 +1242,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "iota-streams-test"
+name = "iota_streams_lib"
 version = "0.1.0"
 dependencies = [
  "anyhow",
