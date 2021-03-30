@@ -20,7 +20,7 @@ You can then import the library into your project with:
 `extern crate gateway_core;`
 -->
 
-## API
+## Author API
 To <b>Create a new Author</b> use `AuthorBuilder`:
 <br>
 `let author = AuthorBuilder::new().node(node_url).send_options(send_opts).encoding(encoding).build().unwrap();`
@@ -29,7 +29,7 @@ To <b>Create a new Author</b> use `AuthorBuilder`:
 * `encoding` is the encoding method of data (i.e. `utf-8`).
 * Each step of the building process is optional: default values for each field are provided.
 <br><br>
-To <b>Create a new channel</b>  use:  
+To <b>Create a new channel</b> use:  
 `Channel::new(author);`
 * The author is the one created above. It is suggested to use an author created from the `AuthorBuilder struct` to avoid unexpected behaviours.
 
@@ -53,6 +53,33 @@ To <b>Store and Restore the channel state</b> use `channel.export_to_file(psw, f
 * `send_opts` is an `Option<SendOptions>`: contains the same struct as before or `None` for default value.
 
 Make sure to use the `export_to_file()` method when you are sure the channel is updated to the last message attached to the tangle or the stored state will be inconsistent.
+
+## Subscriber API
+To <b>Create a new Subscriber</b> use `SubscriberBuilder`:
+<br>
+`let subscriber = SubscriberBuilder::new().node(node_url).send_options(send_opts).encoding(encoding).build().unwrap();`
+* `node_url` is the url of a node on a `chrysalis` net.
+* `send_opts` is a `SendOptions struct` of the official Iota-streams API.
+* `encoding` is the encoding method of data (i.e. `utf-8`).
+* Each step of the building process is optional: default values for each field are provided.
+<br><br>
+
+To <b>Read from a channel</b> follow these steps:
+1. Create the reader:<br>
+   `let channel_reader = ChannelReader::new(subscriber, channel_address, announce_id);`
+2. Attach the reader to the channel:<br>
+   `channel_reader.attach()`
+3. Retrieve all msgs on the channel:<br>
+   `let msgs = channel_reader.fetch_remaining_msgs();`
+4. Loop over them and parse:<br>
+   ```
+   for m in msgs {
+      let address = m.0;
+      let data: CustomMessage = Payload::unwrap_data(m.1).unwrap();
+      //`CustomMessage` struct must implement serde::{Serialize, Deserialize} traits
+      /* collect data */
+   }
+   ```
 
 ## Example
 In the `main.rs` file there is a more detailed example on how to send messages and recover channel state.

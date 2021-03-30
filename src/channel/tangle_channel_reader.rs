@@ -37,7 +37,7 @@ impl ChannelReader {
     ///
     /// Open a Channel Reader
     ///
-    pub fn open(&mut self) -> Result<()> {
+    pub fn attach(&mut self) -> Result<()> {
         let link = create_link(&self.channel_address, &self.announcement_id)?;
         self.subscriber.receive_announcement(&link)
     }

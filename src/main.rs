@@ -103,9 +103,8 @@ pub fn test_get_messages_from_tangle(channel_address: &str, announce_id: &str) -
 
     println!("Receiving announce");
     let mut channel_reader = ChannelReader::new(subscriber, channel_address, announce_id);
-    channel_reader.open()?;
+    channel_reader.attach()?;
     println!("Announce received");
-    let (channel_address, announce_id) = channel_reader.channel_address();
     println!("Channel: {}:{}\n", channel_address, announce_id);
 
     println!("Getting messages ... ");
