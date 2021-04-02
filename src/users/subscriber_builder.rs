@@ -4,7 +4,6 @@ use iota_streams::app::transport::tangle::{
 };
 use crate::utility::iota_utility::random_seed;
 use iota_streams::app_channels::api::tangle::Subscriber;
-use anyhow::Result;
 use iota_streams::app::transport::TransportOptions;
 
 pub struct SubscriberBuilder{
@@ -51,13 +50,12 @@ impl SubscriberBuilder{
         self
     }
 
-    pub fn build(self) -> Result<Subscriber<StreamsClient>>{
+    pub fn build(self) -> Subscriber<StreamsClient>{
         let mut client = StreamsClient::new_from_url(&self.node_url);
         client.set_send_options(self.send_options);
-        let subscriber = Subscriber::new(&self.seed,
-                                 &self.encoding,
-                                 PAYLOAD_BYTES,
-                                 client);
-        Ok(subscriber)
+        Subscriber::new(&self.seed,
+                        &self.encoding,
+                        PAYLOAD_BYTES,
+                        client)
     }
 }

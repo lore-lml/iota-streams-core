@@ -70,14 +70,14 @@ impl AuthorBuilder{
         self
     }
 
-    pub fn build(self) -> Result<Author<StreamsClient>>{
+    pub fn build(self) -> Author<StreamsClient>{
         let mut client = StreamsClient::new_from_url(&self.node_url);
         client.set_send_options(self.send_options);
-        let author = Author::new(&self.seed,
-                                 &self.encoding,
-                                 PAYLOAD_BYTES,
-                                 false, //self.multi_branching,
-                                 client);
-        Ok(author)
+        Author::new(&self.seed,
+                    &self.encoding,
+                    PAYLOAD_BYTES,
+                    false,
+                    //self.multi_branching,
+                    client)
     }
 }
