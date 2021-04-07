@@ -76,7 +76,7 @@ impl AuthorBuilder{
         Author::new(&self.seed,
                     &self.encoding,
                     PAYLOAD_BYTES,
-                    false,
+                    true,
                     //self.multi_branching,
                     client)
     }

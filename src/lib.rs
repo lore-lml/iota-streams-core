@@ -10,5 +10,5 @@ unstable_features
 pub mod channel;
 pub mod payload;
 pub mod utility;
-pub mod users;
+pub mod user_builders;
 

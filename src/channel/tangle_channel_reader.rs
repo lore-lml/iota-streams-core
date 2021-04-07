@@ -18,7 +18,7 @@ pub struct ChannelReader {
     subscriber: Subscriber<StreamsClient>,
     channel_address: String,
     announcement_id: String,
-    //next_msg_id: String,
+    unread_msgs: Vec<(String, Vec<u8>, bool)>,
 }
 
 impl ChannelReader {
@@ -30,27 +30,45 @@ impl ChannelReader {
             subscriber,
             channel_address: channel_address.to_string(),
             announcement_id: announcement_id.to_string(),
-            //next_msg_id: String::default(),
+            unread_msgs: Vec::new()
         }
     }
 
     ///
-    /// Open a Channel Reader
+    /// Attach the Reader to Channel
     ///
-    pub fn attach(&mut self) -> Result<()> {
+    pub async fn attach(&mut self) -> Result<()> {
         let link = create_link(&self.channel_address, &self.announcement_id)?;
-        self.subscriber.receive_announcement(&link)
+        self.subscriber.receive_announcement(&link).await
+    }
+
+    ///
+    /// Send a subscription to a channel for future private communications
+    ///
+    pub async fn send_subscription(&mut self) -> Result<String>{
+        let link = create_link(&self.channel_address, &self.announcement_id)?;
+        let addr = self.subscriber.send_subscribe(&link).await?.msgid.to_string();
+        Ok(addr)
+    }
+
+    ///
+    /// Join to the private communications of the specified keyload address
+    ///
+    #[allow(dead_code)]
+    async fn join_private_communications(&mut self, address: String) -> Result<bool>{
+        let link = create_link(&self.channel_address, &address)?;
+        self.subscriber.receive_keyload(&link).await
     }
 
     ///
     /// Receive a signed packet and parse its content in a struct with the`DeserializeOwned`trait
     ///
-    pub fn receive_signed<T>(&mut self, msg_id: &str) -> Result<T>
+    pub async fn receive_signed<T>(&mut self, msg_id: &str) -> Result<T>
         where
             T: DeserializeOwned
     {
         let msg_link = create_link(&self.channel_address, msg_id)?;
-        let (_, public_payload, _) = self.subscriber.receive_signed_packet(&msg_link)?;
+        let (_, public_payload, _) = self.subscriber.receive_signed_packet(&msg_link).await?;
         let p_data: T = Payload::unwrap_data(public_payload.0).unwrap();
         Ok(p_data)
     }
@@ -61,36 +79,9 @@ impl ChannelReader {
     /// # Return Value
     /// It returns a Vector of Tuple containing (msg_id, content_bytes)
     ///
-    pub fn fetch_remaining_msgs(&mut self) -> Vec<(String, Vec<u8>)> {
-        let mut result: Vec<(String, Vec<u8>)> = Vec::new();
-
-        let mut has_next = true;
-
-        while has_next{
-            let mut msgs: Vec<(String, Vec<u8>)> = self.subscriber.fetch_next_msgs().iter()
-                .map(|msg| {
-                    let link = msg.link.rel().to_string().clone();
-
-                    let (p_data, _) = match &msg.body {
-                        MessageContent::SignedPacket {public_payload, masked_payload, .. } => (public_payload.0.clone(), masked_payload.0.clone()),
-                        _ => (Vec::new(), Vec::new())
-                    };
-
-                    (link, p_data)
-                })
-                .filter(|msg|  {
-                    msg.1.len() > 0
-                })
-                .collect();
-
-            if msgs.len() > 0{
-                result.append(&mut msgs);
-            }else {
-                has_next = false;
-            }
-        }
-
-        result
+    pub async fn get_all_msgs(&mut self) -> Vec<(String, Vec<u8>, bool)> {
+        while self.fetch_next_msgs().await > 0 {};
+        self.unread_msgs.clone()
     }
 
     ///
@@ -98,5 +89,39 @@ impl ChannelReader {
     ///
     pub fn channel_address(&self) -> (String, String){
         (self.channel_address.clone(), self.announcement_id.clone())
+    }
+}
+
+impl ChannelReader{
+    pub async fn fetch_next_msgs(&mut self) -> u8{
+        let mut found = 0;
+        let msgs = self.subscriber.fetch_next_msgs().await;
+        for msg in msgs {
+            let link = msg.link.rel();
+            match msg.body{
+                MessageContent::Keyload => {
+                    found += 1;
+                    println!("Keyload found");
+                }
+                MessageContent::SignedPacket {pk: _, public_payload, masked_payload } => {
+                    found += 1;
+                    let p = public_payload.0;
+                    let m = masked_payload.0;
+
+
+                    println!("Packet found:");
+                    println!("Public: {}", String::from_utf8(p.clone()).unwrap());
+                    println!("Masked: {}", String::from_utf8(m.clone()).unwrap());
+
+                    if p.len() > 0 {
+                        self.unread_msgs.push((link.to_string(), p, false));
+                    }else if m.len() > 0{
+                        self.unread_msgs.push((link.to_string(), m, true));
+                    }
+                }
+                _ => {println!("{}", link.to_string());}
+            }
+        }
+        found
     }
 }
