@@ -7,17 +7,15 @@ use serde::{Serialize, Deserialize};
 pub struct ChannelState{
     author_state: Vec<u8>,
     announcement_id: String,
-    last_public_msg: String,
-    last_masked_msg: String,
+    last_msg_id: String,
 }
 
 impl ChannelState {
-    pub fn new(author_state: &Vec<u8>, announcement_id: &str, last_public_msg: &str, last_masked_msg: &str) -> ChannelState{
+    pub fn new(author_state: &Vec<u8>, announcement_id: &str, last_public_msg: &str) -> ChannelState{
         ChannelState{
             author_state: author_state.clone(),
             announcement_id: announcement_id.to_string(),
-            last_public_msg: last_public_msg.to_string(),
-            last_masked_msg: last_masked_msg.to_string(),
+            last_msg_id: last_public_msg.to_string(),
         }
     }
 
@@ -44,10 +42,7 @@ impl ChannelState{
     pub fn announcement_id(&self) -> String {
         self.announcement_id.clone()
     }
-    pub fn last_public_msg(&self) -> String {
-        self.last_public_msg.clone()
-    }
-    pub fn last_masked_msg(&self) -> String {
-        self.last_masked_msg.clone()
+    pub fn last_msg_id(&self) -> String {
+        self.last_msg_id.clone()
     }
 }

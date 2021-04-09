@@ -6,9 +6,9 @@ This repository has been forked from [iot2tangle/streams-gateway-core](https://d
 This lib allows to :
 * Create single branch channels
 * Sending signed packets (public data only right now) to the Tangle (and the Tangle only).
-* Restoring channels to keep chaining messages to the same one even after the application stops.
+* Restoring channels to keep chaining messages to an already existing channel, even after the application stops.
 
-To learn more about IOTA-Streams clicke [here](https://docs.iota.org/docs/iota-streams/1.1/overview)
+To learn more about IOTA-Streams click [here](https://docs.iota.org/docs/iota-streams/1.1/overview)
 
 <!--
 ## Usage

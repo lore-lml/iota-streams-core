@@ -1,13 +1,10 @@
-extern crate rand;
 use anyhow::{Result, bail};
-use crypto::hashes::{blake2b, Digest};
-use iota_streams::app::transport::tangle::client::{SendOptions, Client};
+use iota_streams::app::transport::tangle::client::SendOptions;
 use iota_streams::core::prelude::hex;
 use rand::Rng;
-use iota_streams::app_channels::api::tangle::{Address, Author};
-use std::fs::OpenOptions;
-use std::io::{Write, Read};
-use iota_streams::app::transport::TransportOptions;
+use iota_streams::app_channels::api::tangle::Address;
+use blake2::{Blake2b, Digest};
+use iota_streams::ddml::types::Bytes;
 
 ///
 /// Generates a new random String of 81 Chars of A..Z and 9
@@ -37,9 +34,9 @@ pub fn create_send_options(min_weight_magnitude: u8, local_pow: bool) -> SendOpt
     send_opt
 }
 
-pub fn hash_string(string: &str) ->  Result<String>  {
-    let hash = blake2b::Blake2b256::digest(&string.as_bytes());
-    Ok(hex::encode(&hash))
+pub fn hash_string(string: &str) ->  String  {
+    let hash = Blake2b::digest(&string.as_bytes());
+    hex::encode(&hash)
 }
 
 pub fn create_link(channel_address: &str, msg_id: &str) -> Result<Address>{
@@ -49,19 +46,6 @@ pub fn create_link(channel_address: &str, msg_id: &str) -> Result<Address>{
     }
 }
 
-pub fn export_author_state(author: &Author<Client>, path: &str, psw: &str) -> Result<()>{
-    let mut fr = OpenOptions::new().write(true).create(true).truncate(true).open(path)?;
-    let state = author.export(psw)?;
-    fr.write_all(&state)?;
-    Ok(())
-}
-
-pub fn import_author_from_state(path: &str, psw: &str) -> Result<Author<Client>>{
-    let opts = create_send_options(9, false);
-    let mut client = Client::new_from_url("https://api.lb-0.testnet.chrysalis2.com");
-    client.set_send_options(opts);
-    let mut fr = OpenOptions::new().read(true).open(path)?;
-    let mut state: Vec<u8> = Vec::new();
-    fr.read_to_end(&mut state)?;
-    Author::import(&state, psw, client)
+pub fn empty_bytes() -> Bytes {
+    Bytes::default()
 }

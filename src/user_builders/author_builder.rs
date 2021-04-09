@@ -33,7 +33,7 @@ impl AuthorBuilder{
                             node_url: Option<&str>,
                             send_option: Option<SendOptions>) -> Result<Author<StreamsClient>>{
 
-        let psw_hash = hash_string(psw).unwrap();
+        let psw_hash = hash_string(psw);
         let node = match node_url {
             Some(url) => url,
             None => "https://api.lb-0.testnet.chrysalis2.com"

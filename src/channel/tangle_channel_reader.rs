@@ -5,11 +5,11 @@ use iota_streams::{
 };
 
 use std::string::ToString;
-use crate::payload::payload_serializer::json::Payload;
 use serde::de::DeserializeOwned;
 use iota_streams::app_channels::api::tangle::MessageContent;
 use iota_streams::app::message::HasLink;
 use crate::utility::iota_utility::create_link;
+use crate::payload::payload_json_serializer::JsonPacket;
 
 ///
 /// Channel Reader
@@ -63,13 +63,17 @@ impl ChannelReader {
     ///
     /// Receive a signed packet and parse its content in a struct with the`DeserializeOwned`trait
     ///
-    pub async fn receive_signed<T>(&mut self, msg_id: &str) -> Result<T>
+    pub async fn receive_signed<T, U>(&mut self, msg_id: &str) -> Result<T>
         where
-            T: DeserializeOwned
+            T: DeserializeOwned,
+            U: DeserializeOwned
     {
         let msg_link = create_link(&self.channel_address, msg_id)?;
-        let (_, public_payload, _) = self.subscriber.receive_signed_packet(&msg_link).await?;
-        let p_data: T = Payload::unwrap_data(public_payload.0).unwrap();
+        let (_, public_payload, masked_payload) = self.subscriber.receive_signed_packet(&msg_link).await?;
+        let (p_data, m_data): (T, U) = JsonPacket::from_streams_response(&public_payload.0, &masked_payload.0, None)
+            .unwrap()
+            .parse_data()
+            .unwrap();
         Ok(p_data)
     }
 
