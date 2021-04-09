@@ -8,10 +8,12 @@ use iota_streams_lib::{
 };
 
 use std::fs::File;
-use iota_streams_lib::payload::payload_json_serializer::JsonPacketBuilder;
+use iota_streams_lib::payload::payload_json_serializer::{JsonPacketBuilder, JsonPacket};
 use iota_streams_lib::user_builders::author_builder::AuthorBuilder;
 use iota_streams_lib::channel::tangle_channel_writer::ChannelWriter;
 use anyhow::Result;
+use iota_streams_lib::user_builders::subscriber_builder::SubscriberBuilder;
+use iota_streams_lib::channel::tangle_channel_reader::ChannelReader;
 
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -57,11 +59,9 @@ async fn send_signed_message(channel: &mut ChannelWriter, device_id: &str){
 
 async fn test_channel_create() -> Result<(String, String)>{
     let send_opt = create_send_options(9, false);
-    let node_url = "https://api.lb-0.testnet.chrysalis2.com";
 
     let author = AuthorBuilder::new()
         .send_options(send_opt)
-        .node(node_url)
         .build();
 
     let mut channel = ChannelWriter::new(author);
@@ -77,7 +77,31 @@ async fn test_channel_create() -> Result<(String, String)>{
     Ok((channel_address, announce_id))
 }
 
+async fn test_receive_messages(channel_id: String, announce_id: String) -> Result<()>{
+    let key = b"an example very very secret key.";
+    let nonce = b"extra long unique nonce!";
+    let key_nonce = Some((key.to_vec(), nonce.to_vec()));
+
+    let sub = SubscriberBuilder::new()
+        .send_options(create_send_options(9, false))
+        .build();
+    let mut reader = ChannelReader::new(sub, &channel_id, &announce_id);
+    reader.attach().await?;
+    println!("Announce Received");
+    let msgs = reader.fetch_parsed_msgs(&key_nonce).await.unwrap() as Vec<(String, JsonPacket)>;
+    println!();
+    for (id, packet) in msgs {
+        println!("Msg Id: {}", id);
+        let (p, m): (Message, Message) = packet.parse_data()?;
+        println!("Public: {:?}", p);
+        println!("Private: {:?}\n", m);
+    }
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main(){
-    test_channel_create().await.unwrap();
+    let (channel, announce) = test_channel_create().await.unwrap();
+    test_receive_messages(channel, announce).await.unwrap();
 }

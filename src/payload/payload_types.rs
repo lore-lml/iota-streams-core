@@ -33,8 +33,8 @@ where
         }
     }
 
-    pub fn from_streams_response(p_data: &[u8], m_data: &[u8], key_nonce: Option<(Vec<u8>, Vec<u8>)>) -> Result<StreamsPacket<P>>{
-        let (p, m) = match &key_nonce{
+    pub fn from_streams_response(p_data: &[u8], m_data: &[u8], key_nonce: &Option<(Vec<u8>, Vec<u8>)>) -> Result<StreamsPacket<P>>{
+        let (p, m) = match key_nonce{
             None => (p_data.to_vec(), m_data.to_vec()),
             Some((key, nonce)) => {
                 let key_arr = GenericArray::from_slice(&key[..]);
@@ -52,7 +52,7 @@ where
             p_data: decode_config(p, URL_SAFE_NO_PAD)?,
             m_data: decode_config(m, URL_SAFE_NO_PAD)?,
             _marker: PhantomData,
-            key_nonce,
+            key_nonce: key_nonce.clone(),
             }
         )
     }
