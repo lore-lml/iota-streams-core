@@ -1,15 +1,15 @@
+use std::string::ToString;
+
 use anyhow::Result;
 use iota_streams::{
-    app::transport::tangle::client::{Client as StreamsClient},
+    app::transport::tangle::client::Client as StreamsClient,
     app_channels::api::tangle::Subscriber
 };
-
-use std::string::ToString;
-use iota_streams::app_channels::api::tangle::MessageContent;
 use iota_streams::app::message::HasLink;
+use iota_streams::app_channels::api::tangle::MessageContent;
+
+use crate::payload::payload_types::{StreamsPacket, StreamsPacketSerializer};
 use crate::utility::iota_utility::create_link;
-use crate::payload::payload_types::{StreamsPayloadSerializer, StreamsPacket};
-use iota_streams::core::prelude::hex;
 
 ///
 /// Channel Reader
@@ -56,7 +56,7 @@ impl ChannelReader {
     ///
     pub async fn receive_parsed_packet<T>(&mut self, msg_id: &str, key_nonce: Option<(Vec<u8>, Vec<u8>)>) -> Result<StreamsPacket<T>>
         where
-            T: StreamsPayloadSerializer,
+            T: StreamsPacketSerializer,
     {
         let msg_link = create_link(&self.channel_address, msg_id)?;
         let (_, public_payload, masked_payload) = self.subscriber.receive_signed_packet(&msg_link).await?;
@@ -70,7 +70,7 @@ impl ChannelReader {
     ///
     pub async fn receive_raw_packet<T>(&mut self, msg_id: &str) -> Result<(Vec<u8>, Vec<u8>)>
         where
-            T: StreamsPayloadSerializer,
+            T: StreamsPacketSerializer,
     {
         let msg_link = create_link(&self.channel_address, msg_id)?;
         let (_, public_payload, masked_payload) = self.subscriber.receive_signed_packet(&msg_link).await?;
@@ -96,7 +96,7 @@ impl ChannelReader {
     ///
     pub async fn fetch_parsed_msgs<T>(&mut self, key_nonce: &Option<(Vec<u8>, Vec<u8>)>) -> Result<Vec<(String, StreamsPacket<T>)>>
     where
-        T: StreamsPayloadSerializer
+        T: StreamsPacketSerializer
     {
         while self.fetch_next_msgs().await > 0 {};
 
@@ -129,9 +129,9 @@ impl ChannelReader{
                     let m = masked_payload.0;
 
 
-                    println!("Packet found:");
+                    /*println!("Packet found:");
                     println!("Public: {}", hex::encode(&p));
-                    println!("Masked: {}", hex::encode(&m));
+                    println!("Masked: {}", hex::encode(&m));*/
 
                     if !p.is_empty() || !m.is_empty(){
                         self.unread_msgs.push((link.to_string(), p, m));

@@ -1,14 +1,15 @@
-use iota_streams::ddml::types::Bytes;
+use std::marker::PhantomData;
+
+use anyhow::{Error, Result};
+use base64::{decode_config, encode_config, URL_SAFE_NO_PAD};
+use chacha20poly1305::aead::{Aead, NewAead};
 use chacha20poly1305::aead::generic_array::GenericArray;
 use chacha20poly1305::XChaCha20Poly1305;
-use chacha20poly1305::aead::{NewAead, Aead};
-use anyhow::{Result, Error};
-use serde::Serialize;
+use iota_streams::ddml::types::Bytes;
 use serde::de::DeserializeOwned;
-use std::marker::PhantomData;
-use base64::{encode_config, URL_SAFE_NO_PAD, decode_config};
+use serde::Serialize;
 
-pub trait StreamsPayloadSerializer {
+pub trait StreamsPacketSerializer {
     fn serialize<T: Serialize>(data: &T) -> Result<String>;
     fn deserialize<T: DeserializeOwned>(data: &[u8]) -> Result<T>;
 }
@@ -22,7 +23,7 @@ pub struct StreamsPacket<P>{
 
 impl<P> StreamsPacket<P>
 where
-    P: StreamsPayloadSerializer,
+    P: StreamsPacketSerializer,
 {
     fn new(p_data: &[u8], m_data: &[u8], key_nonce: Option<(Vec<u8>, Vec<u8>)>) -> StreamsPacket<P>{
         StreamsPacket{
@@ -99,7 +100,7 @@ pub struct StreamsPacketBuilder<P>{
 
 impl<P> StreamsPacketBuilder<P>
 where
-    P: StreamsPayloadSerializer,
+    P: StreamsPacketSerializer,
 {
     pub fn new() -> Self{
         StreamsPacketBuilder{

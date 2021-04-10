@@ -1,14 +1,16 @@
+use std::string::ToString;
+
 use anyhow::Result;
 use iota_streams::{
     app::transport::tangle::client::{Client as StreamsClient, SendOptions},
     app_channels::api::tangle::Author,
 };
 
-use std::string::ToString;
 use crate::channel::channel_state::ChannelState;
-use crate::utility::iota_utility::{hash_string, create_link};
+use crate::payload::payload_raw_serializer::PacketBuilder;
+use crate::payload::payload_types::{StreamsPacket, StreamsPacketSerializer};
 use crate::user_builders::author_builder::AuthorBuilder;
-use crate::payload::payload_types::{StreamsPacket, StreamsPayloadSerializer};
+use crate::utility::iota_utility::{create_link, hash_string};
 
 ///
 /// Channel
@@ -73,9 +75,37 @@ impl ChannelWriter {
     ///
     /// Write signed packet with formatted data.
     ///
+    pub async fn send_signed_raw_data(&mut self, p_data: Vec<u8>, m_data: Vec<u8>, key_nonce: Option<(Vec<u8>, Vec<u8>)>) -> Result<String> {
+        let link_to = create_link(&self.channel_address, &self.last_msg_id)?;
+        let packet = match key_nonce{
+            None => PacketBuilder::new()
+                .public(&p_data)?
+                .masked(&m_data)?
+                .build(),
+            Some((key, nonce)) => PacketBuilder::new()
+                .public(&p_data)?
+                .masked(&m_data)?
+                .key_nonce(&key, &nonce)
+                .build()
+        };
+
+        let ret_link = self.author.send_signed_packet(
+            &link_to,
+            &packet.public_data()?,
+            &packet.masked_data()?,
+        ).await?;
+
+        let msg_id = ret_link.0.msgid.to_string();
+        self.last_msg_id = msg_id.clone();
+        Ok(msg_id)
+    }
+
+    ///
+    /// Write signed packet with formatted data.
+    ///
     pub async fn send_signed_packet<T>(&mut self, packet: &StreamsPacket<T>) -> Result<String>
     where
-        T: StreamsPayloadSerializer,
+        T: StreamsPacketSerializer,
     {
         let link_to = create_link(&self.channel_address, &self.last_msg_id)?;
         let (public_payload, masked_payload) = (packet.public_data()?, packet.masked_data()?);

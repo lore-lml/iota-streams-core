@@ -1,3 +1,6 @@
+use std::fs::File;
+
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 use iota_streams_lib::{
@@ -6,15 +9,11 @@ use iota_streams_lib::{
         time_utility::{current_time, TimeUnit}
     }
 };
-
-use std::fs::File;
-use iota_streams_lib::payload::payload_json_serializer::{JsonPacketBuilder, JsonPacket};
-use iota_streams_lib::user_builders::author_builder::AuthorBuilder;
-use iota_streams_lib::channel::tangle_channel_writer::ChannelWriter;
-use anyhow::Result;
-use iota_streams_lib::user_builders::subscriber_builder::SubscriberBuilder;
 use iota_streams_lib::channel::tangle_channel_reader::ChannelReader;
-
+use iota_streams_lib::channel::tangle_channel_writer::ChannelWriter;
+use iota_streams_lib::payload::payload_raw_serializer::{Packet, PacketBuilder};
+use iota_streams_lib::user_builders::author_builder::AuthorBuilder;
+use iota_streams_lib::user_builders::subscriber_builder::SubscriberBuilder;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Message {
@@ -45,7 +44,7 @@ async fn send_signed_message(channel: &mut ChannelWriter, device_id: &str){
     let m: Message = get_message(&format!("PRIVATE: {}", device_id));
     let key = b"an example very very secret key.";
     let nonce = b"extra long unique nonce!";
-    let data = JsonPacketBuilder::new()
+    let data = PacketBuilder::new()
         .public(&p).unwrap()
         .masked(&m).unwrap()
         .key_nonce(key, nonce)
@@ -88,15 +87,16 @@ async fn test_receive_messages(channel_id: String, announce_id: String) -> Resul
     let mut reader = ChannelReader::new(sub, &channel_id, &announce_id);
     reader.attach().await?;
     println!("Announce Received");
-    let msgs = reader.fetch_parsed_msgs(&key_nonce).await.unwrap() as Vec<(String, JsonPacket)>;
+    let msgs = reader.fetch_parsed_msgs(&key_nonce).await.unwrap() as Vec<(String, Packet)>;
     println!();
     for (id, packet) in msgs {
-        println!("Msg Id: {}", id);
+        println!("Message Found:");
+        println!("  Msg Id: {}", id);
         let (p, m): (Message, Message) = packet.parse_data()?;
-        println!("Public: {:?}", p);
-        println!("Private: {:?}\n", m);
+        println!("  Public: {:?}", p);
+        println!("  Private: {:?}\n", m);
     }
-
+    println!("No more messages");
     Ok(())
 }
 
