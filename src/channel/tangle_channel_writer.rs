@@ -133,7 +133,7 @@ impl ChannelWriter {
     ///
     pub fn export_to_file(&self, psw: &str, file_path: &str)-> Result<()>{
         let channel_state = self.export(psw)?;
-        channel_state.write_to_file(file_path);
+        channel_state.write_to_file(file_path)?;
         Ok(())
     }
 

@@ -72,8 +72,27 @@ async fn test_channel_create() -> Result<(String, String)>{
         send_signed_message(&mut channel, &device).await;
     }
 
-    //channel.export_to_file("mypsw", "example/channel_state.json")?;
+    channel.export_to_file("mypsw", "example/channel_state.json")?;
     Ok((channel_address, announce_id))
+}
+
+async fn test_restore_channel() -> Result<()>{
+    let send_opt = create_send_options(9, false);
+
+    println!("Restoring Channel ...");
+    let (_, mut channel) = ChannelWriter::import_from_file(
+        "example/channel_state.json",
+        "mypsw",
+        None,
+        Some(send_opt)
+    )?;
+    println!("... Channel Restored");
+
+    let (channel_address, announce_id)= channel.channel_address();
+    println!("Channel: {}:{}", &channel_address, announce_id);
+
+    send_signed_message(&mut channel, "DEVICE_3").await;
+    Ok(())
 }
 
 async fn test_receive_messages(channel_id: String, announce_id: String) -> Result<()>{
@@ -103,5 +122,6 @@ async fn test_receive_messages(channel_id: String, announce_id: String) -> Resul
 #[tokio::main]
 async fn main(){
     let (channel, announce) = test_channel_create().await.unwrap();
+    test_restore_channel().await.unwrap();
     test_receive_messages(channel, announce).await.unwrap();
 }

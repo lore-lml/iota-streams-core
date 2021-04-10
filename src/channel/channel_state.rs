@@ -1,7 +1,9 @@
-use std::fs;
 use std::fs::OpenOptions;
+
 use anyhow::Result;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use iota_streams::core::prelude::hex;
+use crate::utility::iota_utility::hash_string;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ChannelState{
@@ -27,13 +29,14 @@ impl ChannelState {
 }
 
 impl ChannelState{
-    pub fn write_to_file(&self, file_path: &str){
-        match fs::remove_file(file_path){_ => ()};
-        let fr = OpenOptions::new().write(true).create(true).open(file_path).unwrap();
-        match serde_json::to_writer(fr, &self){
-            Ok(_) => (),
-            Err(_) => eprintln!("Error during IO operations")
-        }
+    pub fn write_to_file(&self, file_path: &str) -> Result<()>{
+        let fr = OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .create(true)
+            .open(file_path)?;
+        serde_json::to_writer(fr, &self)?;
+        Ok(())
     }
 
     pub fn author_state(&self) -> Vec<u8> {
@@ -44,5 +47,14 @@ impl ChannelState{
     }
     pub fn last_msg_id(&self) -> String {
         self.last_msg_id.clone()
+    }
+}
+
+impl ChannelState{
+    fn self_encrypt(&self, psw: &str) -> Result<Vec<u8>>{
+        let bytes = bincode::serialize(&self)?;
+        //let hex = hex::encode(&bytes);
+        //let hash = hash_string()
+        Ok(Vec::default())
     }
 }
