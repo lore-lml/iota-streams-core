@@ -4,6 +4,8 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use iota_streams::core::prelude::hex;
 use crate::utility::iota_utility::hash_string;
+use chacha20poly1305::XChaCha20Poly1305;
+use chacha20poly1305::aead::{NewAead, Aead};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ChannelState{
@@ -53,8 +55,14 @@ impl ChannelState{
 impl ChannelState{
     fn self_encrypt(&self, psw: &str) -> Result<Vec<u8>>{
         let bytes = bincode::serialize(&self)?;
-        //let hex = hex::encode(&bytes);
-        //let hash = hash_string()
+        let key_hash = &hash_string(psw)[..32];
+        let nonce_hash = &hash_string(key_hash)[..24];
+        let key = key_hash.as_bytes();
+        let nonce = nonce_hash.as_bytes();
+
+        let chacha = XChaCha20Poly1305::new(key);
+        let enc = chacha.encrypt(nonce, bytes.as_ref());
+        let hex = hex::encode(&enc);
         Ok(Vec::default())
     }
 }

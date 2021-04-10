@@ -14,6 +14,9 @@ use iota_streams_lib::channel::tangle_channel_writer::ChannelWriter;
 use iota_streams_lib::payload::payload_raw_serializer::{Packet, PacketBuilder};
 use iota_streams_lib::user_builders::author_builder::AuthorBuilder;
 use iota_streams_lib::user_builders::subscriber_builder::SubscriberBuilder;
+use aead::generic_array::GenericArray;
+use chacha20poly1305::XChaCha20Poly1305;
+use chacha20poly1305::aead::{NewAead, Aead};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Message {
@@ -121,7 +124,17 @@ async fn test_receive_messages(channel_id: String, announce_id: String) -> Resul
 
 #[tokio::main]
 async fn main(){
-    let (channel, announce) = test_channel_create().await.unwrap();
+    /*let (channel, announce) = test_channel_create().await.unwrap();
     test_restore_channel().await.unwrap();
-    test_receive_messages(channel, announce).await.unwrap();
+    test_receive_messages(channel, announce).await.unwrap();*/
+
+    let key = "an example very very secret key.an example very very secret key."[..32].as_bytes();
+    let key = GenericArray::from_slice(key); // 32-bytes
+    let aead = XChaCha20Poly1305::new(key);
+
+    let nonce = &"an example very very secret key.an example very very secret key.".as_bytes()[..24];
+    let nonce = GenericArray::from_slice(nonce); // 24-bytes; unique
+    let ciphertext = aead.encrypt(nonce, b"plaintext message".as_ref()).expect("encryption failure!");
+    let plaintext = aead.decrypt(nonce, ciphertext.as_ref()).expect("decryption failure!");
+    assert_eq!(&plaintext, b"plaintext message");
 }
