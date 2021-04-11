@@ -56,7 +56,7 @@ async fn send_signed_message(channel: &mut ChannelWriter, device_id: &str, key: 
 }
 
 async fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<(String, String)>{
-    let send_opt = create_send_options(9, false);
+    let send_opt = create_send_options(9);
 
     let author = AuthorBuilder::new()
         .send_options(send_opt)
@@ -76,7 +76,7 @@ async fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str
 }
 
 async fn test_restore_channel(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<()>{
-    let send_opt = create_send_options(9, false);
+    let send_opt = create_send_options(9);
 
     println!("Restoring Channel ...");
     let (_, mut channel) = ChannelWriter::import_from_file(
@@ -98,7 +98,7 @@ async fn test_receive_messages(channel_id: String, announce_id: String, key: &[u
     let key_nonce = Some((key.clone(), nonce.clone()));
 
     let sub = SubscriberBuilder::new()
-        .send_options(create_send_options(9, false))
+        .send_options(create_send_options(9))
         .build();
     let mut reader = ChannelReader::new(sub, &channel_id, &announce_id);
     reader.attach().await?;

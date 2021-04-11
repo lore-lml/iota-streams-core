@@ -4,7 +4,6 @@ use iota_streams::core::prelude::hex;
 use rand::Rng;
 use iota_streams::app_channels::api::tangle::Address;
 use blake2::{Blake2b, Digest};
-use iota_streams::ddml::types::Bytes;
 use std::convert::TryInto;
 
 ///
@@ -28,14 +27,14 @@ pub fn random_seed() -> String {
 ///
 /// Generates SendOptions struct with the specified mwm and pow
 ///
-pub fn create_send_options(min_weight_magnitude: u8, local_pow: bool) -> SendOptions{
+pub fn create_send_options(min_weight_magnitude: u8) -> SendOptions{
     let mut send_opt = SendOptions::default();
     send_opt.min_weight_magnitude = min_weight_magnitude;
-    send_opt.local_pow = local_pow;
+    send_opt.local_pow = false;
     send_opt
 }
 
-pub fn hash_string(string: &str) ->  String  {
+pub fn hash_string(string: &str) -> String{
     let hash = Blake2b::digest(&string.as_bytes());
     hex::encode(&hash)
 }
@@ -54,8 +53,4 @@ pub fn create_encryption_key(string_key: &str) -> [u8; 32]{
 
 pub fn create_encryption_nonce(string_nonce: &str) -> [u8;24]{
     hash_string(string_nonce).as_bytes()[..24].try_into().unwrap()
-}
-
-pub fn empty_bytes() -> Bytes {
-    Bytes::default()
 }
