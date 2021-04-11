@@ -1,20 +1,15 @@
 use std::fs::File;
+use std::time::SystemTime;
 
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use iota_streams_lib::{
-    utility::{
-        iota_utility::create_send_options,
-        time_utility::{current_time, TimeUnit}
-    }
-};
 use iota_streams_lib::channel::tangle_channel_reader::ChannelReader;
 use iota_streams_lib::channel::tangle_channel_writer::ChannelWriter;
 use iota_streams_lib::payload::payload_raw_serializer::{Packet, PacketBuilder};
 use iota_streams_lib::user_builders::author_builder::AuthorBuilder;
 use iota_streams_lib::user_builders::subscriber_builder::SubscriberBuilder;
-use iota_streams_lib::utility::iota_utility::{create_encryption_key, create_encryption_nonce};
+use iota_streams_lib::utility::iota_utility::{create_encryption_key, create_encryption_nonce, create_send_options};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Message {
@@ -31,10 +26,18 @@ pub struct MessagePayload {
     pub weight: f32
 }
 
+fn current_time() -> Option<u128>{
+    match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH){
+        Ok(value) => Some(value.as_secs() as u128),
+        Err(_) => None
+    }
+}
+
+
 fn get_message(device_id: &str) -> Message{
     let fr = File::open("example/message.json").unwrap();
     let mut data: Message = serde_json::from_reader(fr).unwrap();
-    data.timestamp = current_time(TimeUnit::SECONDS).unwrap();
+    data.timestamp = current_time().unwrap();
     data.device = device_id.to_string();
     data
 }
