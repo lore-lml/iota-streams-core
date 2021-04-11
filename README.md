@@ -29,7 +29,7 @@ You can then import the library into your project with:
 
 ## Author API
 ### To Create a new Author use:
-<br>
+
 ```
 let author = AuthorBuilder::new()
             .node(node_url)
@@ -37,6 +37,7 @@ let author = AuthorBuilder::new()
             .encoding(encoding)
             .build();
 ```
+
 * `node_url` is the url of a node on a `chrysalis` net.
 * `send_opts` is a `SendOptions struct` of the official Iota-streams API.
 * `encoding` is the encoding method of data (i.e. `utf-8`).
