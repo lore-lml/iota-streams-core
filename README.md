@@ -10,15 +10,16 @@ This lib allows to :
 
 To learn more about IOTA-Streams click [here](https://docs.iota.org/docs/iota-streams/1.1/overview)
 
-<!--
-## Usage
-To interact with Library import it as a dependency by adding it to the `Cargo.toml` file:  
-`streams_core = { git = "https://github.com/iot2tangle/streams-gateway-core"}`
 
+## Usage
+To interact with Library implementations you can add the dependency in `Cargo.toml` file:
+```
+[dependencies]
+iota_streams_lib = { git = "https://github.com/lore-lml/iota-streams-lib.git"}
+```
 
 You can then import the library into your project with:  
-`extern crate gateway_core;`
--->
+`extern crate iota_streams_lib;`
 
 ## Author API
 To <b>Create a new Author</b> use `AuthorBuilder`:
@@ -29,8 +30,8 @@ To <b>Create a new Author</b> use `AuthorBuilder`:
 * `encoding` is the encoding method of data (i.e. `utf-8`).
 * Each step of the building process is optional: default values for each field are provided.
 <br><br>
-To <b>Create a new channel</b> use:  
-`Channel::new(author);`
+To <b>Write into a new channel</b> use:  
+`let mut channel = ChannelWriter::new(author);`
 * The author is the one created above. It is suggested to use an author created from the `AuthorBuilder struct` to avoid unexpected behaviours.
 
 To <b>Open the channel</b> and get its address:    
@@ -39,11 +40,26 @@ This will open the Channel by generating the channel address and publishing the 
 This address will be needed to read the data from the Tangle
 <br>
 
-To <b>Send signed data</b> over the Tangle:  
-`write_signed<T>(&mut self, data: T) -> Result<String>`
-* The type T needs to have the `serde::Serialize` trait
+To <b>Send signed raw data</b> over the Tangle:  
+`fn send_signed_raw_data(&mut self, p_data: Vec<u8>, m_data: Vec<u8>, key_nonce: Option<(Vec<u8>, Vec<u8>)>) -> Result<String>`<br>
 
 If the transaction is succesfully sent the id of the attached message will be returned.
+
+To <b>Send signed packet</b> over the Tangle:
+`fn send_signed_packet<T>(&mut self, packet: &StreamsPacket<T>) -> Result<String>`
+* The type T needs to have the `StreamsPacketSerializer` trait.
+* For an easier use you can build a valid `StreamsPacket<T>` using a `Packet` struct.<br>
+
+If the transaction is succesfully sent the id of the attached message will be returned.
+  
+To <b>Create a valid packet</b> use:
+```
+   let packet = PacketBuilder::new()
+   .public(&p_data).unwrap()
+   .masked(&m_data).unwrap()
+   .build()
+   ```
+
 
 To <b>Store and Restore the channel state</b> use `channel.export_to_file(psw, file_path)` and `Channel::imports_from_file(file_path, psw, node_url, send_opts)`:
 
