@@ -31,7 +31,7 @@ impl ChannelState {
         let mut input = vec![];
         fr.read_to_end(&mut input)?;
         let ch_state = ChannelState::decrypt(&input, psw)?;
-        println!("\n{:?}\n", ch_state);
+
         Ok(ch_state)
     }
 }
@@ -43,7 +43,7 @@ impl ChannelState{
             .truncate(true)
             .create(true)
             .open(file_path)?;
-        println!("\n{:?}\n", &self);
+
         fr.write_all(&self.encrypt(psw)?.as_bytes())?;
         Ok(())
     }

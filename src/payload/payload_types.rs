@@ -18,14 +18,14 @@ pub struct StreamsPacket<P>{
     p_data: Vec<u8>,
     m_data: Vec<u8>,
     _marker: PhantomData<P>,
-    key_nonce: Option<(Vec<u8>, Vec<u8>)>,
+    key_nonce: Option<([u8;32], [u8;24])>,
 }
 
 impl<P> StreamsPacket<P>
 where
     P: StreamsPacketSerializer,
 {
-    fn new(p_data: &[u8], m_data: &[u8], key_nonce: Option<(Vec<u8>, Vec<u8>)>) -> StreamsPacket<P>{
+    fn new(p_data: &[u8], m_data: &[u8], key_nonce: Option<([u8;32], [u8;24])>) -> StreamsPacket<P>{
         StreamsPacket{
             p_data: p_data.to_vec(),
             m_data: m_data.to_vec(),
@@ -34,7 +34,7 @@ where
         }
     }
 
-    pub fn from_streams_response(p_data: &[u8], m_data: &[u8], key_nonce: &Option<(Vec<u8>, Vec<u8>)>) -> Result<StreamsPacket<P>>{
+    pub fn from_streams_response(p_data: &[u8], m_data: &[u8], key_nonce: &Option<([u8;32], [u8;24])>) -> Result<StreamsPacket<P>>{
         let (p, m) = match key_nonce{
             None => (p_data.to_vec(), m_data.to_vec()),
             Some((key, nonce)) => {
@@ -95,7 +95,7 @@ pub struct StreamsPacketBuilder<P>{
     public: String,
     masked: String,
     _pub_marker: PhantomData<P>,
-    key_nonce: Option<(Vec<u8>, Vec<u8>)>,
+    key_nonce: Option<([u8;32], [u8;24])>,
 }
 
 impl<P> StreamsPacketBuilder<P>
@@ -126,8 +126,8 @@ where
         Ok(self)
     }
 
-    pub fn key_nonce(&mut self, key: &[u8], nonce: &[u8]) -> &mut Self{
-        self.key_nonce = Some((key.to_vec(), nonce.to_vec()));
+    pub fn key_nonce(&mut self, key: &[u8;32], nonce: &[u8;24]) -> &mut Self{
+        self.key_nonce = Some((key.clone(), nonce.clone()));
         self
     }
 

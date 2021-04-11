@@ -54,7 +54,7 @@ impl ChannelReader {
     ///
     /// Receive a signed packet and return it in a StreamsPacket struct that is able to parse its content to your own types
     ///
-    pub async fn receive_parsed_packet<T>(&mut self, msg_id: &str, key_nonce: Option<(Vec<u8>, Vec<u8>)>) -> Result<StreamsPacket<T>>
+    pub async fn receive_parsed_packet<T>(&mut self, msg_id: &str, key_nonce: Option<([u8;32], [u8;24])>) -> Result<StreamsPacket<T>>
         where
             T: StreamsPacketSerializer,
     {
@@ -94,7 +94,7 @@ impl ChannelReader {
     /// # Return Value
     /// It returns a Vector of StreamsPacket that can parse its content
     ///
-    pub async fn fetch_parsed_msgs<T>(&mut self, key_nonce: &Option<(Vec<u8>, Vec<u8>)>) -> Result<Vec<(String, StreamsPacket<T>)>>
+    pub async fn fetch_parsed_msgs<T>(&mut self, key_nonce: &Option<([u8;32], [u8;24])>) -> Result<Vec<(String, StreamsPacket<T>)>>
     where
         T: StreamsPacketSerializer
     {

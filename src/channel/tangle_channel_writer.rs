@@ -75,7 +75,7 @@ impl ChannelWriter {
     ///
     /// Write signed packet with formatted data.
     ///
-    pub async fn send_signed_raw_data(&mut self, p_data: Vec<u8>, m_data: Vec<u8>, key_nonce: Option<(Vec<u8>, Vec<u8>)>) -> Result<String> {
+    pub async fn send_signed_raw_data(&mut self, p_data: Vec<u8>, m_data: Vec<u8>, key_nonce: Option<([u8;32], [u8;24])>) -> Result<String> {
         let link_to = create_link(&self.channel_address, &self.last_msg_id)?;
         let packet = match key_nonce{
             None => PacketBuilder::new()

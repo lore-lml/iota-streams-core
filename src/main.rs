@@ -14,9 +14,7 @@ use iota_streams_lib::channel::tangle_channel_writer::ChannelWriter;
 use iota_streams_lib::payload::payload_raw_serializer::{Packet, PacketBuilder};
 use iota_streams_lib::user_builders::author_builder::AuthorBuilder;
 use iota_streams_lib::user_builders::subscriber_builder::SubscriberBuilder;
-use aead::generic_array::GenericArray;
-use chacha20poly1305::XChaCha20Poly1305;
-use chacha20poly1305::aead::{NewAead, Aead};
+use iota_streams_lib::utility::iota_utility::{create_encryption_key, create_encryption_nonce};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Message {
@@ -41,12 +39,10 @@ fn get_message(device_id: &str) -> Message{
     data
 }
 
-async fn send_signed_message(channel: &mut ChannelWriter, device_id: &str){
+async fn send_signed_message(channel: &mut ChannelWriter, device_id: &str, key: &[u8; 32], nonce: &[u8;24]){
     println!("Sending message ...");
     let p: Message = get_message(&format!("PUBLIC: {}", device_id));
     let m: Message = get_message(&format!("PRIVATE: {}", device_id));
-    let key = b"an example very very secret key.";
-    let nonce = b"extra long unique nonce!";
     let data = PacketBuilder::new()
         .public(&p).unwrap()
         .masked(&m).unwrap()
@@ -59,7 +55,7 @@ async fn send_signed_message(channel: &mut ChannelWriter, device_id: &str){
     println!("  masked: {:?}\n\n", m);
 }
 
-async fn test_channel_create() -> Result<(String, String)>{
+async fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<(String, String)>{
     let send_opt = create_send_options(9, false);
 
     let author = AuthorBuilder::new()
@@ -72,20 +68,20 @@ async fn test_channel_create() -> Result<(String, String)>{
 
     for i in 1..=2{
         let device = format!("DEVICE_{}", i);
-        send_signed_message(&mut channel, &device).await;
+        send_signed_message(&mut channel, &device, key, nonce).await;
     }
 
-    channel.export_to_file("mypsw", "example/channel.state")?;
+    channel.export_to_file(channel_psw, "example/channel.state")?;
     Ok((channel_address, announce_id))
 }
 
-async fn test_restore_channel() -> Result<()>{
+async fn test_restore_channel(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<()>{
     let send_opt = create_send_options(9, false);
 
     println!("Restoring Channel ...");
     let (_, mut channel) = ChannelWriter::import_from_file(
         "example/channel.state",
-        "mypsw",
+        channel_psw,
         None,
         Some(send_opt)
     )?;
@@ -94,14 +90,12 @@ async fn test_restore_channel() -> Result<()>{
     let (channel_address, announce_id)= channel.channel_address();
     println!("Channel: {}:{}", &channel_address, announce_id);
 
-    send_signed_message(&mut channel, "DEVICE_3").await;
+    send_signed_message(&mut channel, "DEVICE_3", key, nonce).await;
     Ok(())
 }
 
-async fn test_receive_messages(channel_id: String, announce_id: String) -> Result<()>{
-    let key = b"an example very very secret key.";
-    let nonce = b"extra long unique nonce!";
-    let key_nonce = Some((key.to_vec(), nonce.to_vec()));
+async fn test_receive_messages(channel_id: String, announce_id: String, key: &[u8; 32], nonce: &[u8; 24]) -> Result<()>{
+    let key_nonce = Some((key.clone(), nonce.clone()));
 
     let sub = SubscriberBuilder::new()
         .send_options(create_send_options(9, false))
@@ -124,17 +118,10 @@ async fn test_receive_messages(channel_id: String, announce_id: String) -> Resul
 
 #[tokio::main]
 async fn main(){
-    let (channel, announce) = test_channel_create().await.unwrap();
-    test_restore_channel().await.unwrap();
-    test_receive_messages(channel, announce).await.unwrap();
-
-    let key = "an example very very secret key.an example very very secret key."[..32].as_bytes();
-    let key = GenericArray::from_slice(key); // 32-bytes
-    let aead = XChaCha20Poly1305::new(key);
-
-    let nonce = &"an example very very secret key.an example very very secret key.".as_bytes()[..24];
-    let nonce = GenericArray::from_slice(nonce); // 24-bytes; unique
-    let ciphertext = aead.encrypt(nonce, b"plaintext message".as_ref()).expect("encryption failure!");
-    let plaintext = aead.decrypt(nonce, ciphertext.as_ref()).expect("decryption failure!");
-    assert_eq!(&plaintext, b"plaintext message");
+    let key = create_encryption_key("This is a secret key!!");
+    let nonce = create_encryption_nonce("This is a secret nonce");
+    let channel_psw = "mypsw";
+    let (channel, announce) = test_channel_create(&key, &nonce, channel_psw).await.unwrap();
+    test_restore_channel(&key, &nonce, &channel_psw).await.unwrap();
+    test_receive_messages(channel, announce, &key, &nonce).await.unwrap();
 }

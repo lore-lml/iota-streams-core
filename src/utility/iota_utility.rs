@@ -5,6 +5,7 @@ use rand::Rng;
 use iota_streams::app_channels::api::tangle::Address;
 use blake2::{Blake2b, Digest};
 use iota_streams::ddml::types::Bytes;
+use std::convert::TryInto;
 
 ///
 /// Generates a new random String of 81 Chars of A..Z and 9
@@ -44,6 +45,15 @@ pub fn create_link(channel_address: &str, msg_id: &str) -> Result<Address>{
         Ok(link) => Ok(link),
         Err(()) => bail!("Failed to create Address from {}:{}", channel_address, msg_id)
     }
+}
+
+pub fn create_encryption_key(string_key: &str) -> [u8; 32]{
+    hash_string(string_key).as_bytes()[..32].try_into().unwrap()
+
+}
+
+pub fn create_encryption_nonce(string_nonce: &str) -> [u8;24]{
+    hash_string(string_nonce).as_bytes()[..24].try_into().unwrap()
 }
 
 pub fn empty_bytes() -> Bytes {
