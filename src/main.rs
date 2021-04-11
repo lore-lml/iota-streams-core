@@ -75,7 +75,7 @@ async fn test_channel_create() -> Result<(String, String)>{
         send_signed_message(&mut channel, &device).await;
     }
 
-    channel.export_to_file("mypsw", "example/channel_state.json")?;
+    channel.export_to_file("mypsw", "example/channel.state")?;
     Ok((channel_address, announce_id))
 }
 
@@ -84,7 +84,7 @@ async fn test_restore_channel() -> Result<()>{
 
     println!("Restoring Channel ...");
     let (_, mut channel) = ChannelWriter::import_from_file(
-        "example/channel_state.json",
+        "example/channel.state",
         "mypsw",
         None,
         Some(send_opt)
@@ -124,9 +124,9 @@ async fn test_receive_messages(channel_id: String, announce_id: String) -> Resul
 
 #[tokio::main]
 async fn main(){
-    /*let (channel, announce) = test_channel_create().await.unwrap();
+    let (channel, announce) = test_channel_create().await.unwrap();
     test_restore_channel().await.unwrap();
-    test_receive_messages(channel, announce).await.unwrap();*/
+    test_receive_messages(channel, announce).await.unwrap();
 
     let key = "an example very very secret key.an example very very secret key."[..32].as_bytes();
     let key = GenericArray::from_slice(key); // 32-bytes
