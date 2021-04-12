@@ -18,6 +18,8 @@ To learn more about IOTA-Streams click [here](https://docs.iota.org/docs/iota-st
 
 
 ## Usage
+First, make sure to use the latest rust version using the command `rustup update`.
+
 To interact with Library implementations you can add the dependency in `Cargo.toml` file:
 ```
 [dependencies]
@@ -25,7 +27,7 @@ iota_streams_lib = { git = "https://github.com/lore-lml/iota-streams-lib.git"}
 ```
 
 You can then import the library into your project with:  
-`extern crate iota_streams_lib;`
+`use iota_streams_lib::*;`
 
 ## Author API
 ### To Create a new Author use:
@@ -140,8 +142,10 @@ let subscriber = SubscriberBuilder::new()
   starting from a secret string.
 
 ## Example
-In the `main.rs` file there is a more detailed example on how to send and receive packets to/from the tangle,
+In the `example` folder there is a more detailed example on how to send and receive packets to/from the tangle,
 and recover channel state.
+
+Use `cargo run --package example` to run the example application.
 
 ## Notes
 In this lib an external approach for the encryption of the masked payload has been used.<br>

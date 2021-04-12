@@ -1,0 +1,15 @@
+[package]
+name = "example"
+version = "0.1.0"
+authors = ["Lorenzo Limoli <lorenzo.limoli@outlook.it>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+iota_streams_lib = { path = ".." }
+anyhow = { version = "1.0", default-features = false }
+tokio = { version = "1.1", features = ["full"] }
+serde = { version = "^1.0", features=["derive"] }
+serde_json = "^1.0"
+
