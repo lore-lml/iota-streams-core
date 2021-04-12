@@ -157,7 +157,9 @@ let subscriber = SubscriberBuilder::new()
   fn hash_string(string: &str) -> String
   ```
   it creates the digest of a string using `blake2b`.
-* `fn create_link(appinst: &str, msg_id: &str) -> Result<Address>`:
+* ```rust
+  fn create_link(appinst: &str, msg_id: &str) -> Result<Address>
+  ```
   it creates the official IOTA-streams `Address` struct with the specified `appinst` and `msg_id`.
 * ```rust
   fn create_encryption_key(string_key: &str) -> [u8; 32]
