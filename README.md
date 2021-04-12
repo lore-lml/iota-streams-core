@@ -73,7 +73,10 @@ This option enables the encryption with the given key and nonce for the masked p
 If the transaction is succesfully sent the id of the attached message will be returned.
 
 ### To Send signed packet, built from custom struct, over the Tangle:
-`async fn send_signed_packet<T>(&mut self, packet: &StreamsPacket<T>) -> Result<String>`
+```rust
+async fn send_signed_packet<T>(&mut self, packet: &StreamsPacket<T>) -> Result<String>
+```
+
 * The type T needs to have the `StreamsPacketSerializer` trait.
 * For an easier use you can build a valid `StreamsPacket<T>` using a `Packet` struct.<br>
 
@@ -144,26 +147,26 @@ let subscriber = SubscriberBuilder::new()
 ## Utility API
 * ```rust
   fn random_seed() -> String
-  ```: 
+  ```
   creates a random seed of 81 chars.
 * ```rust
   fn create_send_options(min_weight_magnitude: u8, local_pow: bool) -> SendOptions
-  ```:
+  ```
   creates a the `SendOptions` struct needed for author and subscriber with the specified `minimum weighted magnitude`.
 * ```rust
   fn hash_string(string: &str) -> String
-  ```:
+  ```
   it creates the digest of a string using `blake2b`.
 * `fn create_link(appinst: &str, msg_id: &str) -> Result<Address>`:
   it creates the official IOTA-streams `Address` struct with the specified `appinst` and `msg_id`.
 * ```rust
   fn create_encryption_key(string_key: &str) -> [u8; 32]
-  ```:
+  ```
   it creates the corresponding key bytes array needed for the encryption and decryption of the masked part of the packet,
   starting from a secret string.
 * ```rust
   fn create_encryption_nonce(string_nonce: &str) -> [u8;24]
-  ```:
+  ```
   it creates the corresponding nonce bytes array needed for the encryption and decryption of the masked part of the packet,
   starting from a secret string.
 
