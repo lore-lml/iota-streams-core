@@ -32,7 +32,7 @@ You can then import the library into your project with:
 ## Author API
 ### To Create a new Author use:
 
-```
+```rust
 let author = AuthorBuilder::new()
             .node(node_url)
             .send_options(send_opts)
@@ -46,17 +46,24 @@ let author = AuthorBuilder::new()
 * Each step of the building process is optional: default values for each field are provided.
 
 ### To Create and Write into a new channel use:  
-```let mut channel = ChannelWriter::new(author);```
+```rust
+let mut channel = ChannelWriter::new(author);
+```
 * The author is the one created above. It is suggested to use an author created from the `AuthorBuilder struct` to avoid unexpected behaviours.
 
 ### To Open the channel and get its address:    
-```let (channel_address, announce_id) = channel.open().unwrap();```  
+```rust
+let (channel_address, announce_id) = channel.open().unwrap();
+```
+
 This will open the Channel by generating the channel address and publishing the signature keys.
 This address will be needed to read the data from the Tangle
 <br>
 
 ### To Send signed raw data over the Tangle:  
-`async fn send_signed_raw_data(&mut self, p_data: Vec<u8>, m_data: Vec<u8>, key_nonce: Option<([u8;32], [u8;24])>) -> Result<String>`<br>
+```rust
+async fn send_signed_raw_data(&mut self, p_data: Vec<u8>, m_data: Vec<u8>, key_nonce: Option<([u8;32], [u8;24])>) -> Result<String>
+```<br>
 * `p_data:` it's a bytes vector containing the public part of the packet.
 * `m_data:` it's a bytes vector containing the masked part of the packet.
 * `key_nonce:` it's an optional tuple of fixed byte array containing the `encryption key` and `nonce`.
@@ -72,16 +79,16 @@ If the transaction is succesfully sent the id of the attached message will be re
 If the transaction is successfully sent the id of the attached message will be returned.
   
 ### To Create a valid packet use:
-```
+```rust
    let packet = PacketBuilder::new()
    .public(&p_data).unwrap()
    .masked(&m_data).unwrap()
    .build()
-   ```
+```
 
 
 ### To Store and Restore the channel state use:
-```
+```rust
 let channel = ChannelWriter::new(author);
 /* ********** Do stuff ********** */
 
@@ -101,7 +108,7 @@ NOTE: Make sure to use the `export_to_file()` method when you are sure the chann
 
 ## Subscriber API
 ### To Create a new Subscriber use:
-```
+```rust
 let subscriber = SubscriberBuilder::new()
                   .node(node_url)
                   .send_options(send_opts)
@@ -115,29 +122,47 @@ let subscriber = SubscriberBuilder::new()
 
 ### To Receive packets from a channel follow these steps:
 1. Create the reader:<br>
-   ```let channel_reader = ChannelReader::new(subscriber, channel_address, announce_id);```
+   ```rust
+   let channel_reader = ChannelReader::new(subscriber, channel_address, announce_id);
+   ```
 2. Attach the reader to the channel:<br>
-   ```channel_reader.attach()```
+   ```rust
+   channel_reader.attach()
+   ```
 3. Retrieve all msgs on the channel:<br>
-   ```let msgs = channel_reader.fetch_raw_msgs(key_nonce);```<br>
-   or<br>
-   ```let msgs = channel_reader.fetch_parsed_msgs(key_nonce);```
+   ```rust
+   let msgs = channel_reader.fetch_raw_msgs(key_nonce);
+   ```
+   <br>or<br>
+   ```rust
+   let msgs = channel_reader.fetch_parsed_msgs(key_nonce);
+   ```
 4. Loop over them and parse.
 
 
 ## Utility API
-* `fn random_seed() -> String`: 
+* ```rust
+  fn random_seed() -> String
+  ```: 
   creates a random seed of 81 chars.
-* `fn create_send_options(min_weight_magnitude: u8, local_pow: bool) -> SendOptions`:
+* ```rust
+  fn create_send_options(min_weight_magnitude: u8, local_pow: bool) -> SendOptions
+  ```:
   creates a the `SendOptions` struct needed for author and subscriber with the specified `minimum weighted magnitude`.
-* `fn hash_string(string: &str) -> String`:
+* ```rust
+  fn hash_string(string: &str) -> String
+  ```:
   it creates the digest of a string using `blake2b`.
 * `fn create_link(appinst: &str, msg_id: &str) -> Result<Address>`:
   it creates the official IOTA-streams `Address` struct with the specified `appinst` and `msg_id`.
-* `fn create_encryption_key(string_key: &str) -> [u8; 32]`:
+* ```rust
+  fn create_encryption_key(string_key: &str) -> [u8; 32]
+  ```:
   it creates the corresponding key bytes array needed for the encryption and decryption of the masked part of the packet,
   starting from a secret string.
-* `fn create_encryption_nonce(string_nonce: &str) -> [u8;24]`:
+* ```rust
+  fn create_encryption_nonce(string_nonce: &str) -> [u8;24]
+  ```:
   it creates the corresponding nonce bytes array needed for the encryption and decryption of the masked part of the packet,
   starting from a secret string.
 
