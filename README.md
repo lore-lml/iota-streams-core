@@ -63,7 +63,8 @@ This address will be needed to read the data from the Tangle
 ### To Send signed raw data over the Tangle:  
 ```rust
 async fn send_signed_raw_data(&mut self, p_data: Vec<u8>, m_data: Vec<u8>, key_nonce: Option<([u8;32], [u8;24])>) -> Result<String>
-```<br>
+```
+
 * `p_data:` it's a bytes vector containing the public part of the packet.
 * `m_data:` it's a bytes vector containing the masked part of the packet.
 * `key_nonce:` it's an optional tuple of fixed byte array containing the `encryption key` and `nonce`.
