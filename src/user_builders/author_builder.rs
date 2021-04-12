@@ -33,7 +33,7 @@ impl AuthorBuilder{
                             node_url: Option<&str>,
                             send_option: Option<SendOptions>) -> Result<Author<StreamsClient>>{
 
-        let psw_hash = hash_string(psw).unwrap();
+        let psw_hash = hash_string(psw);
         let node = match node_url {
             Some(url) => url,
             None => "https://api.lb-0.testnet.chrysalis2.com"
@@ -70,14 +70,14 @@ impl AuthorBuilder{
         self
     }
 
-    pub fn build(self) -> Result<Author<StreamsClient>>{
+    pub fn build(self) -> Author<StreamsClient>{
         let mut client = StreamsClient::new_from_url(&self.node_url);
         client.set_send_options(self.send_options);
-        let author = Author::new(&self.seed,
-                                 &self.encoding,
-                                 PAYLOAD_BYTES,
-                                 false, //self.multi_branching,
-                                 client);
-        Ok(author)
+        Author::new(&self.seed,
+                    &self.encoding,
+                    PAYLOAD_BYTES,
+                    true,
+                    //self.multi_branching,
+                    client)
     }
 }
