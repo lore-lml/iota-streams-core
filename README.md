@@ -3,7 +3,8 @@
 ## Introduction
 This Repository provides the base API to open Channels, publish and receive signed data to the Tangle using the `chrysalis-2` branch of iota-streams.
 <br><br>
-NOTE: `async` version of IOTA-streams API has been used.
+NOTE: `async` version of IOTA-streams API has been used. In order to deal with asynchronous function, 
+it's suggested to use the [tokio crate](https://docs.rs/tokio/1.5.0/tokio/) just like in the example.
 
 This lib allows to :
 * Create single branch channels
@@ -42,6 +43,8 @@ let author = AuthorBuilder::new()
 
 * `node_url` is the url of a node on a `chrysalis` net.
 * `send_opts` is a `SendOptions struct` of the official Iota-streams API.
+  If the target net is the `chrysalis testnet`, it's needed to set a `min weight magnitude` of 9.
+  Use the `create_send_options(9)` API as described in the following [Utility Section](#utility)
 * `encoding` is the encoding method of data (i.e. `utf-8`).
 * Each step of the building process is optional: default values for each field are provided.
 
@@ -121,6 +124,8 @@ let subscriber = SubscriberBuilder::new()
 ```
 * `node_url` is the url of a node on a `chrysalis` net.
 * `send_opts` is a `SendOptions struct` of the official Iota-streams API.
+  If the target net is the `chrysalis testnet`, it's needed to set a `min weight magnitude` of 9.
+  Use the `create_send_options(9)` API as described in the following [Utility Section](#utility)
 * `encoding` is the encoding method of data (i.e. `utf-8`).
 * Each step of the building process is optional: default values for each field are provided.
 
@@ -144,7 +149,8 @@ let subscriber = SubscriberBuilder::new()
 4. Loop over them and parse.
 
 
-## Utility API
+## <a name="utility">Utility API</a>
+
 * ```rust
   fn random_seed() -> String
   ```
