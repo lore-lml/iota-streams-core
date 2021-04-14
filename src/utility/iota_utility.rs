@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::Result;
 use iota_streams::app::transport::tangle::client::SendOptions;
 use iota_streams::core::prelude::hex;
 use rand::Rng;
@@ -27,9 +27,8 @@ pub fn random_seed() -> String {
 ///
 /// Generates SendOptions struct with the specified mwm and pow
 ///
-pub fn create_send_options(min_weight_magnitude: u8) -> SendOptions{
+pub fn create_send_options() -> SendOptions{
     let mut send_opt = SendOptions::default();
-    send_opt.min_weight_magnitude = min_weight_magnitude;
     send_opt.local_pow = false;
     send_opt
 }
@@ -42,7 +41,7 @@ pub fn hash_string(string: &str) -> String{
 pub fn create_link(channel_address: &str, msg_id: &str) -> Result<Address>{
     match Address::from_str(channel_address, msg_id) {
         Ok(link) => Ok(link),
-        Err(()) => bail!("Failed to create Address from {}:{}", channel_address, msg_id)
+        Err(e) => Err(anyhow::anyhow!(e))
     }
 }
 

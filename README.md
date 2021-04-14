@@ -43,8 +43,6 @@ let author = AuthorBuilder::new()
 
 * `node_url` is the url of a node on a `chrysalis` net.
 * `send_opts` is a `SendOptions struct` of the official Iota-streams API.
-  If the target net is the `chrysalis testnet`, it's needed to set a `min weight magnitude` of 9.
-  Use the `create_send_options(9)` API as described in the following [Utility Section](#utility)
 * `encoding` is the encoding method of data (i.e. `utf-8`).
 * Each step of the building process is optional: default values for each field are provided.
 
@@ -124,8 +122,6 @@ let subscriber = SubscriberBuilder::new()
 ```
 * `node_url` is the url of a node on a `chrysalis` net.
 * `send_opts` is a `SendOptions struct` of the official Iota-streams API.
-  If the target net is the `chrysalis testnet`, it's needed to set a `min weight magnitude` of 9.
-  Use the `create_send_options(9)` API as described in the following [Utility Section](#utility)
 * `encoding` is the encoding method of data (i.e. `utf-8`).
 * Each step of the building process is optional: default values for each field are provided.
 
@@ -149,16 +145,16 @@ let subscriber = SubscriberBuilder::new()
 4. Loop over them and parse.
 
 
-## <a name="utility">Utility API</a>
+## Utility API
 
 * ```rust
   fn random_seed() -> String
   ```
   creates a random seed of 81 chars.
 * ```rust
-  fn create_send_options(min_weight_magnitude: u8, local_pow: bool) -> SendOptions
+  fn create_send_options() -> SendOptions
   ```
-  creates a the `SendOptions` struct needed for author and subscriber with the specified `minimum weighted magnitude`.
+  creates a the `SendOptions` struct needed for author and subscriber.
 * ```rust
   fn hash_string(string: &str) -> String
   ```
