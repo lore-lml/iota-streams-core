@@ -54,7 +54,7 @@ let mut channel = ChannelWriter::new(author);
 
 ### To Open the channel and get its address:    
 ```rust
-let (channel_address, announce_id) = channel.open().unwrap();
+let (channel_address, announce_id) = channel.open().await.unwrap();
 ```
 
 This will open the Channel by generating the channel address and publishing the signature keys.
@@ -132,15 +132,15 @@ let subscriber = SubscriberBuilder::new()
    ```
 2. Attach the reader to the channel:<br>
    ```rust
-   channel_reader.attach()
+   channel_reader.attach().await;
    ```
 3. Retrieve all msgs on the channel:<br>
    ```rust
-   let msgs = channel_reader.fetch_raw_msgs(key_nonce);
+   let msgs = channel_reader.fetch_raw_msgs(key_nonce).await;
    ```
    <br>or<br>
    ```rust
-   let msgs = channel_reader.fetch_parsed_msgs(key_nonce);
+   let msgs = channel_reader.fetch_parsed_msgs(key_nonce).await.unwrap();
    ```
 4. Loop over them and parse.
 
