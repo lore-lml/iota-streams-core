@@ -152,10 +152,6 @@ let subscriber = SubscriberBuilder::new()
   ```
   creates a random seed of 81 chars.
 * ```rust
-  fn create_send_options() -> SendOptions
-  ```
-  creates a the `SendOptions` struct needed for author and subscriber.
-* ```rust
   fn hash_string(string: &str) -> String
   ```
   it creates the digest of a string using `blake2b`.

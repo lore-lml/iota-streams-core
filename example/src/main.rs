@@ -9,7 +9,7 @@ use iota_streams_lib::channel::tangle_channel_writer::ChannelWriter;
 use iota_streams_lib::payload::payload_raw_serializer::{Packet, PacketBuilder};
 use iota_streams_lib::user_builders::author_builder::AuthorBuilder;
 use iota_streams_lib::user_builders::subscriber_builder::SubscriberBuilder;
-use iota_streams_lib::utility::iota_utility::{create_encryption_key, create_encryption_nonce, create_send_options};
+use iota_streams_lib::utility::iota_utility::{create_encryption_key, create_encryption_nonce};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Message {
@@ -59,11 +59,7 @@ async fn send_signed_message(channel: &mut ChannelWriter, device_id: &str, key: 
 }
 
 async fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<(String, String)>{
-    let send_opt = create_send_options();
-
-    let author = AuthorBuilder::new()
-        .send_options(send_opt)
-        .build();
+    let author = AuthorBuilder::new().build();
 
     let mut channel = ChannelWriter::new(author);
     let (channel_address, announce_id) = channel.open().await?;
@@ -79,14 +75,12 @@ async fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str
 }
 
 async fn test_restore_channel(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<()>{
-    let send_opt = create_send_options();
-
     println!("Restoring Channel ...");
     let (_, mut channel) = ChannelWriter::import_from_file(
         "example/channel.state",
         channel_psw,
         None,
-        Some(send_opt)
+        None
     )?;
     println!("... Channel Restored");
 
@@ -100,9 +94,7 @@ async fn test_restore_channel(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &st
 async fn test_receive_messages(channel_id: String, announce_id: String, key: &[u8; 32], nonce: &[u8; 24]) -> Result<()>{
     let key_nonce = Some((key.clone(), nonce.clone()));
 
-    let sub = SubscriberBuilder::new()
-        .send_options(create_send_options())
-        .build();
+    let sub = SubscriberBuilder::new().build();
     let mut reader = ChannelReader::new(sub, &channel_id, &announce_id);
     reader.attach().await?;
     println!("Announce Received");

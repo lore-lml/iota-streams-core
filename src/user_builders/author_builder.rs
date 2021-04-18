@@ -19,12 +19,15 @@ pub struct AuthorBuilder{
 
 impl AuthorBuilder{
     pub fn new() -> AuthorBuilder{
+        let mut send_opts = SendOptions::default();
+        send_opts.local_pow = false;
+
         AuthorBuilder{
             seed: random_seed(),
             node_url: "https://api.lb-0.testnet.chrysalis2.com".to_string(),
             encoding: "utf-8".to_string(),
             //multi_branching: false,
-            send_options: SendOptions::default()
+            send_options: send_opts
         }
     }
 
@@ -40,7 +43,11 @@ impl AuthorBuilder{
         };
         let options = match send_option {
             Some(so) => so,
-            None => SendOptions::default()
+            None => {
+                let mut s = SendOptions::default();
+                s.local_pow = false;
+                s
+            }
         };
 
         let mut client = StreamsClient::new_from_url(&node);

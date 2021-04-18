@@ -1,5 +1,4 @@
 use anyhow::Result;
-use iota_streams::app::transport::tangle::client::SendOptions;
 use iota_streams::core::prelude::hex;
 use rand::Rng;
 use iota_streams::app_channels::api::tangle::Address;
@@ -27,11 +26,6 @@ pub fn random_seed() -> String {
 ///
 /// Generates SendOptions struct with the specified mwm and pow
 ///
-pub fn create_send_options() -> SendOptions{
-    let mut send_opt = SendOptions::default();
-    send_opt.local_pow = false;
-    send_opt
-}
 
 pub fn hash_string(string: &str) -> String{
     let hash = Blake2b::digest(&string.as_bytes());

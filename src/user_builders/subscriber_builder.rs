@@ -15,11 +15,14 @@ pub struct SubscriberBuilder{
 
 impl SubscriberBuilder{
     pub fn new() -> SubscriberBuilder{
+        let mut send_opts = SendOptions::default();
+        send_opts.local_pow = false;
+
         SubscriberBuilder{
             seed: random_seed(),
             node_url: "https://api.lb-0.testnet.chrysalis2.com".to_string(),
             encoding: "utf-8".to_string(),
-            send_options: SendOptions::default()
+            send_options: send_opts
         }
     }
 
