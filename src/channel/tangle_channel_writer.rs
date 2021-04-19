@@ -65,8 +65,8 @@ impl ChannelWriter {
     ///
     /// Open a channel
     ///
-    pub async fn open(&mut self) -> Result<(String, String)> {
-        let announce = self.author.send_announce().await?;
+    pub fn open(&mut self) -> Result<(String, String)> {
+        let announce = self.author.send_announce()?;
         self.announcement_id = announce.msgid.to_string();
         self.last_msg_id = self.announcement_id.clone();
         Ok((self.channel_address.clone(), self.announcement_id.clone()))
@@ -75,7 +75,7 @@ impl ChannelWriter {
     ///
     /// Write signed packet with formatted data.
     ///
-    pub async fn send_signed_raw_data(&mut self, p_data: Vec<u8>, m_data: Vec<u8>, key_nonce: Option<([u8;32], [u8;24])>) -> Result<String> {
+    pub fn send_signed_raw_data(&mut self, p_data: Vec<u8>, m_data: Vec<u8>, key_nonce: Option<([u8;32], [u8;24])>) -> Result<String> {
         let link_to = create_link(&self.channel_address, &self.last_msg_id)?;
         let packet = match key_nonce{
             None => PacketBuilder::new()
@@ -93,7 +93,7 @@ impl ChannelWriter {
             &link_to,
             &packet.public_data()?,
             &packet.masked_data()?,
-        ).await?;
+        )?;
 
         let msg_id = ret_link.0.msgid.to_string();
         self.last_msg_id = msg_id.clone();
@@ -103,7 +103,7 @@ impl ChannelWriter {
     ///
     /// Write signed packet with formatted data.
     ///
-    pub async fn send_signed_packet<T>(&mut self, packet: &StreamsPacket<T>) -> Result<String>
+    pub fn send_signed_packet<T>(&mut self, packet: &StreamsPacket<T>) -> Result<String>
     where
         T: StreamsPacketSerializer,
     {
@@ -114,7 +114,7 @@ impl ChannelWriter {
             &link_to,
             &public_payload,
             &masked_payload,
-        ).await?;
+        )?;
 
         let msg_id = ret_link.0.msgid.to_string();
         self.last_msg_id = msg_id.clone();

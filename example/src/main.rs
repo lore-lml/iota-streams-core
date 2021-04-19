@@ -42,7 +42,7 @@ fn get_message(device_id: &str) -> Message{
     data
 }
 
-async fn send_signed_message(channel: &mut ChannelWriter, device_id: &str, key: &[u8; 32], nonce: &[u8;24]){
+fn send_signed_message(channel: &mut ChannelWriter, device_id: &str, key: &[u8; 32], nonce: &[u8;24]){
     println!("Sending message ...");
     let p: Message = get_message(&format!("PUBLIC: {}", device_id));
     let m: Message = get_message(&format!("PRIVATE: {}", device_id));
@@ -51,30 +51,30 @@ async fn send_signed_message(channel: &mut ChannelWriter, device_id: &str, key: 
         .masked(&m).unwrap()
         .key_nonce(key, nonce)
         .build();
-    let msg_id = channel.send_signed_packet(&data).await.unwrap();
+    let msg_id = channel.send_signed_packet(&data).unwrap();
     println!("... Message sent:");
     println!("  id: {}", msg_id);
     println!("  public: {:?}", p);
     println!("  masked: {:?}\n\n", m);
 }
 
-async fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<(String, String)>{
+fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<(String, String)>{
     let author = AuthorBuilder::new().build();
 
     let mut channel = ChannelWriter::new(author);
-    let (channel_address, announce_id) = channel.open().await?;
+    let (channel_address, announce_id) = channel.open()?;
     println!("Channel: {}:{}", &channel_address, &announce_id);
 
     for i in 1..=2{
         let device = format!("DEVICE_{}", i);
-        send_signed_message(&mut channel, &device, key, nonce).await;
+        send_signed_message(&mut channel, &device, key, nonce);
     }
 
     channel.export_to_file(channel_psw, "example/channel.state")?;
     Ok((channel_address, announce_id))
 }
 
-async fn test_restore_channel(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<()>{
+fn test_restore_channel(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<()>{
     println!("Restoring Channel ...");
     let (_, mut channel) = ChannelWriter::import_from_file(
         "example/channel.state",
@@ -87,18 +87,18 @@ async fn test_restore_channel(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &st
     let (channel_address, announce_id)= channel.channel_address();
     println!("Channel: {}:{}", &channel_address, announce_id);
 
-    send_signed_message(&mut channel, "DEVICE_3", key, nonce).await;
+    send_signed_message(&mut channel, "DEVICE_3", key, nonce);
     Ok(())
 }
 
-async fn test_receive_messages(channel_id: String, announce_id: String, key: &[u8; 32], nonce: &[u8; 24]) -> Result<()>{
+fn test_receive_messages(channel_id: String, announce_id: String, key: &[u8; 32], nonce: &[u8; 24]) -> Result<()>{
     let key_nonce = Some((key.clone(), nonce.clone()));
 
     let sub = SubscriberBuilder::new().build();
     let mut reader = ChannelReader::new(sub, &channel_id, &announce_id);
-    reader.attach().await?;
+    reader.attach()?;
     println!("Announce Received");
-    let msgs = reader.fetch_parsed_msgs(&key_nonce).await.unwrap() as Vec<(String, Packet)>;
+    let msgs = reader.fetch_parsed_msgs(&key_nonce).unwrap() as Vec<(String, Packet)>;
     println!();
     for (id, packet) in msgs {
         println!("Message Found:");
@@ -116,7 +116,7 @@ async fn main(){
     let key = create_encryption_key("This is a secret key!!");
     let nonce = create_encryption_nonce("This is a secret nonce");
     let channel_psw = "mypsw";
-    let (channel, announce) = test_channel_create(&key, &nonce, channel_psw).await.unwrap();
-    test_restore_channel(&key, &nonce, &channel_psw).await.unwrap();
-    test_receive_messages(channel, announce, &key, &nonce).await.unwrap();
+    let (channel, announce) = test_channel_create(&key, &nonce, channel_psw).unwrap();
+    test_restore_channel(&key, &nonce, &channel_psw).unwrap();
+    test_receive_messages(channel, announce, &key, &nonce).unwrap();
 }

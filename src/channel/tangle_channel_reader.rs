@@ -37,29 +37,29 @@ impl ChannelReader {
     ///
     /// Attach the Reader to Channel
     ///
-    pub async fn attach(&mut self) -> Result<()> {
+    pub fn attach(&mut self) -> Result<()> {
         let link = create_link(&self.channel_address, &self.announcement_id)?;
-        self.subscriber.receive_announcement(&link).await
+        self.subscriber.receive_announcement(&link)
     }
 
     ///
     /// Send a subscription to a channel for future private communications
     ///
-    pub async fn send_subscription(&mut self) -> Result<String>{
+    pub fn send_subscription(&mut self) -> Result<String>{
         let link = create_link(&self.channel_address, &self.announcement_id)?;
-        let addr = self.subscriber.send_subscribe(&link).await?.msgid.to_string();
+        let addr = self.subscriber.send_subscribe(&link)?.msgid.to_string();
         Ok(addr)
     }
 
     ///
     /// Receive a signed packet and return it in a StreamsPacket struct that is able to parse its content to your own types
     ///
-    pub async fn receive_parsed_packet<T>(&mut self, msg_id: &str, key_nonce: Option<([u8;32], [u8;24])>) -> Result<StreamsPacket<T>>
+    pub fn receive_parsed_packet<T>(&mut self, msg_id: &str, key_nonce: Option<([u8;32], [u8;24])>) -> Result<StreamsPacket<T>>
         where
             T: StreamsPacketSerializer,
     {
         let msg_link = create_link(&self.channel_address, msg_id)?;
-        let (_, public_payload, masked_payload) = self.subscriber.receive_signed_packet(&msg_link).await?;
+        let (_, public_payload, masked_payload) = self.subscriber.receive_signed_packet(&msg_link)?;
         let (p_data, m_data) = (&public_payload.0, &masked_payload.0);
 
         StreamsPacket::from_streams_response(&p_data, &m_data, &key_nonce)
@@ -68,12 +68,12 @@ impl ChannelReader {
     ///
     /// Receive a signed packet in raw format. It returns a tuple (pub_bytes, masked_bytes)
     ///
-    pub async fn receive_raw_packet<T>(&mut self, msg_id: &str) -> Result<(Vec<u8>, Vec<u8>)>
+    pub fn receive_raw_packet<T>(&mut self, msg_id: &str) -> Result<(Vec<u8>, Vec<u8>)>
         where
             T: StreamsPacketSerializer,
     {
         let msg_link = create_link(&self.channel_address, msg_id)?;
-        let (_, public_payload, masked_payload) = self.subscriber.receive_signed_packet(&msg_link).await?;
+        let (_, public_payload, masked_payload) = self.subscriber.receive_signed_packet(&msg_link)?;
         Ok((public_payload.0.clone(), masked_payload.0.clone()))
     }
 
@@ -83,8 +83,8 @@ impl ChannelReader {
     /// # Return Value
     /// It returns a Vector of Tuple containing (msg_id, public_bytes, masked_bytes)
     ///
-    pub async fn fetch_raw_msgs(&mut self) -> Vec<(String, Vec<u8>, Vec<u8>)> {
-        while self.fetch_next_msgs().await > 0 {};
+    pub fn fetch_raw_msgs(&mut self) -> Vec<(String, Vec<u8>, Vec<u8>)> {
+        while self.fetch_next_msgs() > 0 {};
         self.unread_msgs.clone()
     }
 
@@ -94,11 +94,11 @@ impl ChannelReader {
     /// # Return Value
     /// It returns a Vector of StreamsPacket that can parse its content
     ///
-    pub async fn fetch_parsed_msgs<T>(&mut self, key_nonce: &Option<([u8;32], [u8;24])>) -> Result<Vec<(String, StreamsPacket<T>)>>
+    pub fn fetch_parsed_msgs<T>(&mut self, key_nonce: &Option<([u8;32], [u8;24])>) -> Result<Vec<(String, StreamsPacket<T>)>>
     where
         T: StreamsPacketSerializer
     {
-        while self.fetch_next_msgs().await > 0 {};
+        while self.fetch_next_msgs() > 0 {};
 
         let mut res = vec![];
         for (id, p, m) in &self.unread_msgs {
@@ -117,9 +117,9 @@ impl ChannelReader {
 }
 
 impl ChannelReader{
-    pub async fn fetch_next_msgs(&mut self) -> u8{
+    pub fn fetch_next_msgs(&mut self) -> u8{
         let mut found = 0;
-        let msgs = self.subscriber.fetch_next_msgs().await;
+        let msgs = self.subscriber.fetch_next_msgs();
         for msg in msgs {
             let link = msg.link.rel();
             match msg.body{
