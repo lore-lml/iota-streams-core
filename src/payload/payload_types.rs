@@ -81,12 +81,26 @@ where
         Ok(Bytes(data))
     }
 
-    pub fn parse_data<U, T>(&self) -> Result<(U, T)>
+    pub fn deserialize<U, T>(&self) -> Result<(U, T)>
     where
         U: DeserializeOwned,
         T: DeserializeOwned,
     {
         Ok((P::deserialize(&self.p_data)?, P::deserialize(&self.m_data)?))
+    }
+
+    pub fn deserialize_public<T>(&self) -> Result<T>
+    where
+        T: DeserializeOwned
+    {
+        Ok(P::deserialize(&self.p_data)?)
+    }
+
+    pub fn deserialize_masked<T>(&self) -> Result<T>
+        where
+            T: DeserializeOwned
+    {
+        Ok(P::deserialize(&self.m_data)?)
     }
 
 }

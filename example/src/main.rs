@@ -103,7 +103,7 @@ async fn test_receive_messages(channel_id: String, announce_id: String, key: &[u
     for (id, packet) in msgs {
         println!("Message Found:");
         println!("  Msg Id: {}", id);
-        let (p, m): (Message, Message) = packet.parse_data()?;
+        let (p, m): (Message, Message) = packet.deserialize()?;
         println!("  Public: {:?}", p);
         println!("  Private: {:?}\n", m);
     }
