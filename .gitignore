@@ -2,3 +2,4 @@
 /.idea
 /example/*.state
 /Cargo.lock
+/*.iml

@@ -85,10 +85,16 @@ If the transaction is successfully sent the id of the attached message will be r
   
 ### To Create a valid packet use:
 ```rust
-   let packet = PacketBuilder::new()
-   .public(&p_data).unwrap()
-   .masked(&m_data).unwrap()
-   .build()
+/* RawPacketBuilder to serialize and deserialize as bytes */
+let packet = RawPacketBuilder::new()
+    .public(&p_data).unwrap()
+    .masked(&m_data).unwrap()
+    .build()
+
+/* or JsonPacketBuilder to serialize and deserialize in json format */
+let packet = JsonPacketBuilder::new() 
+    ...
+    .build()
 ```
 
 

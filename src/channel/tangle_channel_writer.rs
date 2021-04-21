@@ -7,7 +7,7 @@ use iota_streams::{
 };
 
 use crate::channel::channel_state::ChannelState;
-use crate::payload::payload_raw_serializer::PacketBuilder;
+use crate::payload::payload_serializers::RawPacketBuilder;
 use crate::payload::payload_types::{StreamsPacket, StreamsPacketSerializer};
 use crate::user_builders::author_builder::AuthorBuilder;
 use crate::utility::iota_utility::{create_link, hash_string};
@@ -78,11 +78,11 @@ impl ChannelWriter {
     pub async fn send_signed_raw_data(&mut self, p_data: Vec<u8>, m_data: Vec<u8>, key_nonce: Option<([u8;32], [u8;24])>) -> Result<String> {
         let link_to = create_link(&self.channel_address, &self.last_msg_id)?;
         let packet = match key_nonce{
-            None => PacketBuilder::new()
+            None => RawPacketBuilder::new()
                 .public(&p_data)?
                 .masked(&m_data)?
                 .build(),
-            Some((key, nonce)) => PacketBuilder::new()
+            Some((key, nonce)) => RawPacketBuilder::new()
                 .public(&p_data)?
                 .masked(&m_data)?
                 .key_nonce(&key, &nonce)
