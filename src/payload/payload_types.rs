@@ -1,13 +1,11 @@
 use std::marker::PhantomData;
 
-use anyhow::{Error, Result};
+use anyhow::Result;
 use base64::{decode_config, encode_config, URL_SAFE_NO_PAD};
-use chacha20poly1305::aead::{Aead, NewAead};
-use chacha20poly1305::aead::generic_array::GenericArray;
-use chacha20poly1305::XChaCha20Poly1305;
 use iota_streams::ddml::types::Bytes;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use crate::utility::iota_utility::{decrypt_data, encrypt_data};
 
 pub trait StreamsPacketSerializer {
     fn serialize<T: Serialize>(data: &T) -> Result<String>;
@@ -38,13 +36,8 @@ where
         let (p, m) = match key_nonce{
             None => (p_data.to_vec(), m_data.to_vec()),
             Some((key, nonce)) => {
-                let key_arr = GenericArray::from_slice(&key[..]);
-                let nonce_arr = GenericArray::from_slice(&nonce[..]);
-                let chacha = XChaCha20Poly1305::new(key_arr);
-                match chacha.decrypt(nonce_arr, m_data.as_ref()){
-                    Ok(dec) => (p_data.to_vec(), dec),
-                    Err(_) => return Err(Error::msg("Error during data decryption"))
-                }
+                let dec = decrypt_data(m_data, key, nonce)?;
+                (p_data.to_vec(), dec)
             }
         };
 
@@ -67,15 +60,7 @@ where
         let m = encode_config(&self.m_data, URL_SAFE_NO_PAD).as_bytes().to_vec();
         let data = match &self.key_nonce{
             None => m,
-            Some((key, nonce)) => {
-                let key_arr = GenericArray::from_slice(&key[..]);
-                let nonce_arr = GenericArray::from_slice(&nonce[..]);
-                let chacha = XChaCha20Poly1305::new(key_arr);
-                match chacha.encrypt(nonce_arr, m.as_ref()){
-                    Ok(enc) => enc,
-                    Err(_) => return Err(Error::msg("Error during data encryption"))
-                }
-            }
+            Some((key, nonce)) => encrypt_data(&m, key, nonce)?
         };
 
         Ok(Bytes(data))

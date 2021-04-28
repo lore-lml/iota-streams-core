@@ -74,7 +74,7 @@ impl ChannelReaderBuilder{
         self
     }
 
-    pub fn build(&self, channel_id: &str, announce_id: &str) -> ChannelReader{
+    pub fn build(self, channel_id: &str, announce_id: &str) -> ChannelReader{
         ChannelReader::new(self.subscriber_builder.build(), channel_id, announce_id)
     }
 }
