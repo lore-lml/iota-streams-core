@@ -24,11 +24,13 @@ pub struct JsonSerializer;
 impl StreamsPacketSerializer for JsonSerializer{
     fn serialize<T: Serialize>(data: &T) -> Result<String> {
         let bytes = serde_json::to_string(data)?.as_bytes().to_vec();
+        let bytes = bincode::serialize(&bytes)?;
         Ok(hex::encode(bytes))
     }
 
     fn deserialize<T: DeserializeOwned>(data: &[u8]) -> Result<T> {
         let data = hex::decode(data)?;
+        let data: Vec<u8> = bincode::deserialize(&data)?;
         Ok(serde_json::from_slice(&data)?)
     }
 }
