@@ -3,8 +3,8 @@
 ## Introduction
 This Repository provides the base API to open Channels, publish and receive signed data to the Tangle using the `chrysalis-2` branch of iota-streams.
 <br><br>
-NOTE: `async` version of IOTA-streams API has been used. In order to deal with asynchronous function, 
-it's suggested to use the [tokio crate](https://docs.rs/tokio/1.5.0/tokio/) just like in the example.
+NOTE: `async` version of IOTA-streams API has been used. In order to evaluate `streams responses`, 
+[tokio crate](https://docs.rs/tokio/1.5.0/tokio/) is needed (just like in the example).
 
 This lib allows to :
 * Create single branch channels
@@ -50,11 +50,21 @@ let author = AuthorBuilder::new()
 ```rust
 let mut channel = ChannelWriter::new(author);
 ```
+
+or directly using:
+
+```rust
+let mut channel = ChannelWriterBuilder::new()
+                    .node(node_url)
+                    .send_options(send_opts)
+                    .encoding(encoding)
+                    .build();
+```
 * The author is the one created above. It is suggested to use an author created from the `AuthorBuilder struct` to avoid unexpected behaviours.
 
 ### To Open the channel and get its address:    
 ```rust
-let (channel_address, announce_id) = channel.open().await.unwrap();
+let (channel_id, announce_id) = channel.open().await.unwrap();
 ```
 
 This will open the Channel by generating the channel address and publishing the signature keys.
@@ -85,10 +95,11 @@ If the transaction is successfully sent the id of the attached message will be r
   
 ### To Create a valid packet use:
 ```rust
-/* RawPacketBuilder to serialize and deserialize as bytes */
+/* RawPacketBuilder to serialize and deserialize in bin format */
 let packet = RawPacketBuilder::new()
     .public(&p_data).unwrap()
     .masked(&m_data).unwrap()
+    .key_nonce(key, nonce)
     .build()
 
 /* or JsonPacketBuilder to serialize and deserialize in json format */
@@ -134,8 +145,18 @@ let subscriber = SubscriberBuilder::new()
 ### To Receive packets from a channel follow these steps:
 1. Create the reader:<br>
    ```rust
-   let channel_reader = ChannelReader::new(subscriber, channel_address, announce_id);
+   let channel_reader = ChannelReader::new(subscriber, channel_id, announce_id);
    ```
+
+   or directly using:
+   
+    ```rust
+    let mut channel_reader = ChannelReaderBuilder::new()
+                        .node(node_url)
+                        .send_options(send_opts)
+                        .encoding(encoding)
+                        .build(channel_id, announce_id);
+    ```
 2. Attach the reader to the channel:<br>
    ```rust
    channel_reader.attach().await;

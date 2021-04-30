@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use iota_streams_lib::channel::tangle_channel_writer::ChannelWriter;
 use iota_streams_lib::payload::payload_serializers::{JsonPacketBuilder, JsonPacket};
-use iota_streams_lib::utility::iota_utility::{create_encryption_key, create_encryption_nonce, random_seed};
+use iota_streams_lib::utility::iota_utility::{create_encryption_key, create_encryption_nonce};
 use iota_streams_lib::channel::builders::channel_builders::{ChannelWriterBuilder, ChannelReaderBuilder};
 
 #[derive(Serialize, Deserialize, Debug)]
