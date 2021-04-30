@@ -4,6 +4,7 @@ use crate::channel::tangle_channel_writer::ChannelWriter;
 use crate::user_builders::subscriber_builder::SubscriberBuilder;
 use crate::channel::tangle_channel_reader::ChannelReader;
 
+
 pub struct ChannelWriterBuilder{
     author_builder: AuthorBuilder
 }
@@ -16,23 +17,23 @@ impl ChannelWriterBuilder{
         }
     }
 
-    pub fn seed(&mut self, seed: &str) -> &Self{
-        self.author_builder.seed(seed);
+    pub fn seed(mut self, seed: &str) -> Self{
+        self.author_builder = self.author_builder.seed(seed);
         self
     }
 
-    pub fn node(&mut self, node_url: &str) -> &Self{
-        self.author_builder.node(node_url);
+    pub fn node(mut self, node_url: &str) -> Self{
+        self.author_builder = self.author_builder.node(node_url);
         self
     }
 
-    pub fn encoding(&mut self, encoding: &str) -> &Self{
-        self.author_builder.encoding(encoding);
+    pub fn encoding(mut self, encoding: &str) -> Self{
+        self.author_builder = self.author_builder.encoding(encoding);
         self
     }
 
-    pub fn send_options(&mut self, send_options: SendOptions) -> &Self{
-        self.author_builder.send_options(send_options);
+    pub fn send_options(mut self, send_options: SendOptions) -> Self{
+        self.author_builder = self.author_builder.send_options(send_options);
         self
     }
 
@@ -54,23 +55,23 @@ impl ChannelReaderBuilder{
         }
     }
 
-    pub fn seed(&mut self, seed: &str) -> &Self{
-        self.subscriber_builder.seed(seed);
+    pub fn seed(mut self, seed: &str) -> Self{
+        self.subscriber_builder = self.subscriber_builder.seed(seed);
         self
     }
 
-    pub fn node(&mut self, node_url: &str) -> &Self{
-        self.subscriber_builder.node(node_url);
+    pub fn node(mut self, node_url: &str) -> Self{
+        self.subscriber_builder = self.subscriber_builder.node(node_url);
         self
     }
 
-    pub fn encoding(&mut self, encoding: &str) -> &Self{
-        self.subscriber_builder.encoding(encoding);
+    pub fn encoding(mut self, encoding: &str) -> Self{
+        self.subscriber_builder = self.subscriber_builder.encoding(encoding);
         self
     }
 
-    pub fn send_options(&mut self, send_options: SendOptions) -> &Self{
-        self.subscriber_builder.send_options(send_options);
+    pub fn send_options(mut self, send_options: SendOptions) -> Self{
+        self.subscriber_builder = self.subscriber_builder.send_options(send_options);
         self
     }
 

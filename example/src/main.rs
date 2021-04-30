@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use iota_streams_lib::channel::tangle_channel_writer::ChannelWriter;
 use iota_streams_lib::payload::payload_serializers::{JsonPacketBuilder, JsonPacket};
-use iota_streams_lib::utility::iota_utility::{create_encryption_key, create_encryption_nonce};
+use iota_streams_lib::utility::iota_utility::{create_encryption_key, create_encryption_nonce, random_seed};
 use iota_streams_lib::channel::builders::channel_builders::{ChannelWriterBuilder, ChannelReaderBuilder};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -56,6 +56,9 @@ async fn send_signed_message(channel: &mut ChannelWriter, device_id: &str, key: 
     println!("  masked: {:?}\n\n", m);
 }
 
+/*
+USE https://chrysalis-nodes.iota.cafe/ for a node of the new chrysalis mainnet
+*/
 async fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<(String, String)>{
     let mut channel = ChannelWriterBuilder::new().build();
     let (channel_address, announce_id) = channel.open().await?;
