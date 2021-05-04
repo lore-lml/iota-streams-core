@@ -75,7 +75,7 @@ async fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str
 
 async fn test_restore_channel(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<()>{
     println!("Restoring Channel ...");
-    let (_, mut channel) = ChannelWriter::import_from_file(
+    let mut channel = ChannelWriter::import_from_file(
         "example/channel.state",
         channel_psw,
         None,

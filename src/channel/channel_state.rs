@@ -27,7 +27,7 @@ impl ChannelState {
     }
 
     pub fn from_file(file_path: &str, psw: &str) -> Result<ChannelState>{
-        let mut fr = OpenOptions::new().read(true).open(file_path).unwrap();
+        let mut fr = OpenOptions::new().read(true).open(file_path)?;
         let mut input = vec![];
         fr.read_to_end(&mut input)?;
         let ch_state = ChannelState::decrypt(&input, psw)?;

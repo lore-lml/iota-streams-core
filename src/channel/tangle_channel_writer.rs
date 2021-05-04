@@ -56,10 +56,10 @@ impl ChannelWriter {
     ///
     /// Restore the channel from a previously stored state in a file
     ///
-    pub fn import_from_file(file_path: &str, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<(ChannelState, ChannelWriter)>{
+    pub fn import_from_file(file_path: &str, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
         let channel_state = ChannelState::from_file(file_path, &psw)?;
         let channel = ChannelWriter::import(&channel_state, psw, node_url, send_options)?;
-        Ok((channel_state, channel))
+        Ok(channel)
     }
 
     ///
