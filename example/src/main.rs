@@ -24,6 +24,11 @@ pub struct MessagePayload {
     pub weight: f32
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct State {
+    state: Vec<u8>,
+}
+
 fn current_time() -> Option<u128>{
     match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH){
         Ok(value) => Some(value.as_secs() as u128),
@@ -63,6 +68,7 @@ async fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str
     let mut channel = ChannelWriterBuilder::new().build();
     let (channel_address, announce_id) = channel.open().await?;
     println!("Channel: {}:{}", &channel_address, &announce_id);
+    println!("Announce Index: {}", channel.msg_index(&announce_id)?);
 
     for i in 1..=2{
         let device = format!("DEVICE_{}", i);
@@ -80,7 +86,7 @@ async fn test_restore_channel(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &st
         channel_psw,
         None,
         None
-    )?;
+    ).await?;
     println!("... Channel Restored");
 
     let (channel_address, announce_id)= channel.channel_address();
@@ -103,7 +109,8 @@ async fn test_receive_messages(channel_id: String, announce_id: String, key: &[u
         println!("  Msg Id: {}", id);
         let (p, m): (Message, Message) = packet.deserialize()?;
         println!("  Public: {:?}", p);
-        println!("  Private: {:?}\n", m);
+        println!("  Private: {:?}", m);
+        println!("  Index: {}\n", reader.msg_index(&id)?);
     }
     println!("No more messages");
     Ok(())

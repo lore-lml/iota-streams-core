@@ -10,7 +10,7 @@ use crate::channel::channel_state::ChannelState;
 use crate::payload::payload_serializers::RawPacketBuilder;
 use crate::payload::payload_types::{StreamsPacket, StreamsPacketSerializer};
 use crate::user_builders::author_builder::AuthorBuilder;
-use crate::utility::iota_utility::{create_link, hash_string};
+use crate::utility::iota_utility::{create_link, hash_string, msg_index};
 
 ///
 /// Channel
@@ -36,6 +36,18 @@ impl ChannelWriter {
         }
     }
 
+    async fn check_update_state(&mut self){
+        loop{
+            let mut msgs = self.author.fetch_next_msgs().await;
+            if msgs.is_empty(){break;}
+            let last_msg = match msgs.pop(){
+                None => return,
+                Some(m) => m
+            };
+            self.last_msg_id = last_msg.link.msgid.to_string();
+        }
+    }
+
     fn import(channel_state: &ChannelState, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
         let author = AuthorBuilder::build_from_state(
             &channel_state.author_state(),
@@ -54,11 +66,22 @@ impl ChannelWriter {
     }
 
     ///
+    /// Restore the channel from a previously stored byte array state
+    ///
+    pub async fn import_from_bytes(state: &[u8], psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
+        let channel_state = ChannelState::decrypt(&state, &psw)?;
+        let mut channel = ChannelWriter::import(&channel_state, psw, node_url, send_options)?;
+        channel.check_update_state().await;
+        Ok(channel)
+    }
+
+    ///
     /// Restore the channel from a previously stored state in a file
     ///
-    pub fn import_from_file(file_path: &str, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
+    pub async fn import_from_file(file_path: &str, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
         let channel_state = ChannelState::from_file(file_path, &psw)?;
-        let channel = ChannelWriter::import(&channel_state, psw, node_url, send_options)?;
+        let mut channel = ChannelWriter::import(&channel_state, psw, node_url, send_options)?;
+        channel.check_update_state().await;
         Ok(channel)
     }
 
@@ -69,7 +92,9 @@ impl ChannelWriter {
         let announce = self.author.send_announce().await?;
         self.announcement_id = announce.msgid.to_string();
         self.last_msg_id = self.announcement_id.clone();
-        Ok((self.channel_address.clone(), self.announcement_id.clone()))
+        let res = (self.channel_address.clone(), self.announcement_id.clone());
+
+        Ok(res)
     }
 
     ///
@@ -129,6 +154,14 @@ impl ChannelWriter {
     }
 
     ///
+    /// Export the channel state into an encrypted byte array.
+    ///
+    pub fn export_to_bytes(&self, psw: &str)-> Result<Vec<u8>>{
+        let channel_state = self.export(psw)?;
+        channel_state.encrypt(psw)
+    }
+
+    ///
     /// Stores the channel state in a file. The author state is encrypted with the specified password
     ///
     pub fn export_to_file(&self, psw: &str, file_path: &str)-> Result<()>{
@@ -142,5 +175,13 @@ impl ChannelWriter {
     ///
     pub fn channel_address(&self) -> (String, String){
         (self.channel_address.clone(), self.announcement_id.clone())
+    }
+
+    ///
+    /// Get the index of msg to find the transaction on the tangle
+    ///
+    pub fn msg_index(&self, msg_id: &str) -> Result<String>{
+        let addr = create_link(&self.channel_address, msg_id)?;
+        Ok(msg_index(&addr))
     }
 }

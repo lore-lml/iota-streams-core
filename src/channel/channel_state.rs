@@ -30,9 +30,7 @@ impl ChannelState {
         let mut fr = OpenOptions::new().read(true).open(file_path)?;
         let mut input = vec![];
         fr.read_to_end(&mut input)?;
-        let ch_state = ChannelState::decrypt(&input, psw)?;
-
-        Ok(ch_state)
+        Ok(ChannelState::decrypt(&input, psw)?)
     }
 }
 
@@ -44,7 +42,7 @@ impl ChannelState{
             .create(true)
             .open(file_path)?;
 
-        fr.write_all(&self.encrypt(psw)?.as_bytes())?;
+        fr.write_all(&self.encrypt(psw)?)?;
         Ok(())
     }
 
@@ -60,7 +58,7 @@ impl ChannelState{
 }
 
 impl ChannelState{
-    fn encrypt(&self, psw: &str) -> Result<String>{
+    pub fn encrypt(&self, psw: &str) -> Result<Vec<u8>>{
         let bytes = bincode::serialize(&self)?;
 
         let (key, nonce) = get_key_nonce(psw);
@@ -73,10 +71,10 @@ impl ChannelState{
             Err(_) => return Err(anyhow::Error::msg("Error during state encryption")),
         };
         let base64 = encode_config(&enc, URL_SAFE_NO_PAD);
-        Ok(base64)
+        Ok(base64.as_bytes().to_vec())
     }
 
-    fn decrypt(input: &[u8], psw: &str) -> Result<ChannelState>{
+    pub fn decrypt(input: &[u8], psw: &str) -> Result<ChannelState>{
         let bytes = decode_config(input, URL_SAFE_NO_PAD)?;
 
         let (key, nonce) = get_key_nonce(psw);

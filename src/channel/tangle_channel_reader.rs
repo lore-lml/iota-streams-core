@@ -9,7 +9,7 @@ use iota_streams::app::message::HasLink;
 use iota_streams::app_channels::api::tangle::MessageContent;
 
 use crate::payload::payload_types::{StreamsPacket, StreamsPacketSerializer};
-use crate::utility::iota_utility::create_link;
+use crate::utility::iota_utility::{create_link, msg_index};
 
 ///
 /// Channel Reader
@@ -114,10 +114,18 @@ impl ChannelReader {
     pub fn channel_address(&self) -> (String, String){
         (self.channel_address.clone(), self.announcement_id.clone())
     }
+
+    ///
+    /// Get the index of msg to find the transaction on the tangle
+    ///
+    pub fn msg_index(&self, msg_id: &str) -> Result<String>{
+        let addr = create_link(&self.channel_address, msg_id)?;
+        Ok(msg_index(&addr))
+    }
 }
 
 impl ChannelReader{
-    pub async fn fetch_next_msgs(&mut self) -> u8{
+    async fn fetch_next_msgs(&mut self) -> u8{
         let mut found = 0;
         let msgs = self.subscriber.fetch_next_msgs().await;
         for msg in msgs {
@@ -127,11 +135,6 @@ impl ChannelReader{
                     found += 1;
                     let p = public_payload.0;
                     let m = masked_payload.0;
-
-
-                    /*println!("Packet found:");
-                    println!("Public: {}", hex::encode(&p));
-                    println!("Masked: {}", hex::encode(&m));*/
 
                     if !p.is_empty() || !m.is_empty(){
                         self.unread_msgs.push((link.to_string(), p, m));
