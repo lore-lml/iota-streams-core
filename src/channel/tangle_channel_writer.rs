@@ -7,10 +7,12 @@ use iota_streams::{
 };
 
 use crate::channel::channel_state::ChannelState;
-use crate::payload::payload_serializers::RawPacketBuilder;
+use crate::payload::payload_serializers::{RawPacketBuilder, RawPacket};
 use crate::payload::payload_types::{StreamsPacket, StreamsPacketSerializer};
 use crate::user_builders::author_builder::AuthorBuilder;
 use crate::utility::iota_utility::{create_link, hash_string, msg_index};
+use crate::user_builders::subscriber_builder::SubscriberBuilder;
+use iota_streams::app_channels::api::tangle::MessageContent;
 
 ///
 /// Channel
@@ -36,35 +38,6 @@ impl ChannelWriter {
         }
     }
 
-    async fn check_update_state(&mut self){
-        loop{
-            let mut msgs = self.author.fetch_next_msgs().await;
-            if msgs.is_empty(){break;}
-            let last_msg = match msgs.pop(){
-                None => return,
-                Some(m) => m
-            };
-            self.last_msg_id = last_msg.link.msgid.to_string();
-        }
-    }
-
-    fn import(channel_state: &ChannelState, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
-        let author = AuthorBuilder::build_from_state(
-            &channel_state.author_state(),
-            psw,
-            node_url,
-            send_options
-        )?;
-        let channel_address = author.channel_address().unwrap().to_string();
-
-        Ok(ChannelWriter {
-            author,
-            channel_address,
-            announcement_id: channel_state.announcement_id(),
-            last_msg_id: channel_state.last_msg_id(),
-        })
-    }
-
     ///
     /// Restore the channel from a previously stored byte array state
     ///
@@ -85,6 +58,13 @@ impl ChannelWriter {
         Ok(channel)
     }
 
+    pub async fn import_from_tangle(channel_id: &str, announce_id: &str, state_psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
+        match ChannelWriter::check_state(channel_id, announce_id).await{
+            Ok(state) => ChannelWriter::import_from_bytes(&state, state_psw, node_url, send_options).await,
+            Err(_) => Err(anyhow::Error::msg("There is no state in the channel"))
+        }
+    }
+
     ///
     /// Open a channel
     ///
@@ -95,6 +75,20 @@ impl ChannelWriter {
         let res = (self.channel_address.clone(), self.announcement_id.clone());
 
         Ok(res)
+    }
+
+    ///
+    /// Open a channel and save as first message the encrypted state of the channel itself
+    ///
+    pub async fn open_and_save(&mut self, state_psw: &str) -> Result<(String, String, String)>{
+        let res = self.open().await?;
+
+        let public = format!("{}:{}.state", self.channel_address, self.announcement_id).as_bytes().to_vec();
+        let masked = self.export_to_bytes(state_psw)?;
+
+        let state_msg_id = self.send_signed_raw_data(public, masked, None).await?;
+
+        Ok((res.0, res.1, state_msg_id))
     }
 
     ///
@@ -146,13 +140,6 @@ impl ChannelWriter {
         Ok(msg_id)
     }
 
-
-    fn export(&self, psw: &str) -> Result<ChannelState>{
-        let psw_hash = hash_string(psw);
-        let author_state = self.author.export(&psw_hash)?;
-        Ok(ChannelState::new(&author_state, &self.announcement_id, &self.last_msg_id))
-    }
-
     ///
     /// Export the channel state into an encrypted byte array.
     ///
@@ -183,5 +170,64 @@ impl ChannelWriter {
     pub fn msg_index(&self, msg_id: &str) -> Result<String>{
         let addr = create_link(&self.channel_address, msg_id)?;
         Ok(msg_index(&addr))
+    }
+}
+
+impl ChannelWriter{
+    async fn check_update_state(&mut self){
+        loop{
+            let mut msgs = self.author.fetch_next_msgs().await;
+            if msgs.is_empty(){break;}
+            let last_msg = match msgs.pop(){
+                None => return,
+                Some(m) => m
+            };
+            self.last_msg_id = last_msg.link.msgid.to_string();
+        }
+    }
+
+    fn import(channel_state: &ChannelState, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
+        let author = AuthorBuilder::build_from_state(
+            &channel_state.author_state(),
+            psw,
+            node_url,
+            send_options
+        )?;
+        let channel_address = author.channel_address().unwrap().to_string();
+
+        Ok(ChannelWriter {
+            author,
+            channel_address,
+            announcement_id: channel_state.announcement_id(),
+            last_msg_id: channel_state.last_msg_id(),
+        })
+    }
+
+    fn export(&self, psw: &str) -> Result<ChannelState>{
+        let psw_hash = hash_string(psw);
+        let author_state = self.author.export(&psw_hash)?;
+        Ok(ChannelState::new(&author_state, &self.announcement_id, &self.last_msg_id))
+    }
+
+    async fn check_state(channel_id: &str, announce_id: &str) -> Result<Vec<u8>>{
+        let mut subscriber = SubscriberBuilder::new().build();
+        subscriber.receive_announcement(&create_link(channel_id, announce_id)?).await?;
+        match subscriber.fetch_next_msgs().await.pop(){
+            None => return Err(anyhow::Error::msg("There is no state in the channel")),
+            Some(m) => {
+                match m.body{
+                    MessageContent::SignedPacket { public_payload, masked_payload, .. } => {
+                        let comp = format!("{}:{}.state", channel_id, announce_id);
+                        let (public, masked): (String, Vec<u8>) = RawPacket::from_streams_response(&public_payload.0, &masked_payload.0, &None)?
+                            .deserialize()?;
+                        if public != comp{
+                            return Err(anyhow::Error::msg("There is no state in the channel"))
+                        }
+                        Ok(masked)
+                    }
+                    _ => return Err(anyhow::Error::msg("There is no state in the channel"))
+                }
+            }
+        }
     }
 }

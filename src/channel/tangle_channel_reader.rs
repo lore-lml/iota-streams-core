@@ -10,6 +10,7 @@ use iota_streams::app_channels::api::tangle::MessageContent;
 
 use crate::payload::payload_types::{StreamsPacket, StreamsPacketSerializer};
 use crate::utility::iota_utility::{create_link, msg_index};
+use crate::payload::payload_serializers::RawPacket;
 
 ///
 /// Channel Reader
@@ -39,7 +40,28 @@ impl ChannelReader {
     ///
     pub async fn attach(&mut self) -> Result<()> {
         let link = create_link(&self.channel_address, &self.announcement_id)?;
-        self.subscriber.receive_announcement(&link).await
+        self.subscriber.receive_announcement(&link).await?;
+
+        if self.fetch_next_msgs().await == 0{
+            return Ok(());
+        }
+
+        let comp = format!("{}:{}.state", self.channel_address, self.announcement_id);
+        let msg = &self.unread_msgs[0];
+        let packet = match RawPacket::from_streams_response(&msg.1, &msg.2, &None){
+            Ok(packet) => packet,
+            Err(_) => return Ok(())
+        };
+
+        match packet.deserialize_public::<String>(){
+            Ok(state_msg) => {
+                if state_msg == comp{
+                    self.unread_msgs.remove(0);
+                }
+            }
+            Err(_) => {}
+        };
+        Ok(())
     }
 
     ///
