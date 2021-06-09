@@ -65,7 +65,7 @@ async fn send_signed_message(channel: &mut ChannelWriter, device_id: &str, key: 
 USE https://chrysalis-nodes.iota.cafe/ for a node of the new chrysalis mainnet
 */
 async fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<(String, String)>{
-    let mut channel = ChannelWriterBuilder::new().build();
+    let mut channel = ChannelWriterBuilder::new().node("https://chrysalis-nodes.iota.cafe/").build();
     //let (channel_address, announce_id) = channel.open().await?;
     let (channel_address, announce_id, state_msg_id) = channel.open_and_save(channel_psw).await?;
     println!("Channel: {}:{}", &channel_address, &announce_id);
@@ -86,7 +86,7 @@ async fn test_restore_channel(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &st
     let mut channel = ChannelWriter::import_from_file(
         "example/channel.state",
         channel_psw,
-        None,
+        Some("https://chrysalis-nodes.iota.cafe/"),
         None
     ).await?;
     println!("... Channel Restored");
@@ -104,7 +104,7 @@ async fn test_restore_channel_from_tangle(channel: &str, announce: &str, key: &[
         channel,
         announce,
         state_psw,
-        None,
+        Some("https://chrysalis-nodes.iota.cafe/"),
         None).await?;
     println!("... Channel Restored from TANGLE");
 
@@ -118,7 +118,7 @@ async fn test_restore_channel_from_tangle(channel: &str, announce: &str, key: &[
 async fn test_receive_messages(channel_id: String, announce_id: String, key: &[u8; 32], nonce: &[u8; 24]) -> Result<()>{
     let key_nonce = Some((key.clone(), nonce.clone()));
 
-    let mut reader = ChannelReaderBuilder::new().build(&channel_id, &announce_id);
+    let mut reader = ChannelReaderBuilder::new().node("https://chrysalis-nodes.iota.cafe/").build(&channel_id, &announce_id);
     reader.attach().await?;
     println!("Announce Received");
     let msgs = reader.fetch_parsed_msgs(&key_nonce).await.unwrap() as Vec<(String, JsonPacket)>;

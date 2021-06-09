@@ -59,7 +59,7 @@ impl ChannelWriter {
     }
 
     pub async fn import_from_tangle(channel_id: &str, announce_id: &str, state_psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
-        match ChannelWriter::check_state(channel_id, announce_id).await{
+        match ChannelWriter::check_state(channel_id, announce_id, node_url).await{
             Ok(state) => ChannelWriter::import_from_bytes(&state, state_psw, node_url, send_options).await,
             Err(_) => Err(anyhow::Error::msg("There is no state in the channel"))
         }
@@ -209,8 +209,11 @@ impl ChannelWriter{
         Ok(ChannelState::new(&author_state, &self.announcement_id, &self.last_msg_id))
     }
 
-    async fn check_state(channel_id: &str, announce_id: &str) -> Result<Vec<u8>>{
-        let mut subscriber = SubscriberBuilder::new().build();
+    async fn check_state(channel_id: &str, announce_id: &str, node_url: Option<&str>) -> Result<Vec<u8>>{
+        let mut subscriber = match node_url{
+            None => SubscriberBuilder::new().build(),
+            Some(node) => SubscriberBuilder::new().node(node).build()
+        };
         subscriber.receive_announcement(&create_link(channel_id, announce_id)?).await?;
         match subscriber.fetch_next_msgs().await.pop(){
             None => return Err(anyhow::Error::msg("There is no state in the channel")),
