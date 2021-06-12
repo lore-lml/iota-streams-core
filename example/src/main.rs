@@ -7,7 +7,6 @@ use serde::{Deserialize, Serialize};
 use iota_streams_lib::channels::{ChannelWriter, ChannelReader};
 use iota_streams_lib::payload::payload_serializers::{JsonPacketBuilder, JsonPacket};
 use iota_streams_lib::utility::iota_utility::{create_encryption_key, create_encryption_nonce};
-use iota_streams_lib::channels::builders::channel_builders::{ChannelWriterBuilder, ChannelReaderBuilder};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Message {
@@ -65,7 +64,7 @@ async fn send_signed_message(channel: &mut ChannelWriter, device_id: &str, key: 
 USE https://chrysalis-nodes.iota.cafe/ for a node of the new chrysalis mainnet
 */
 async fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<(String, String)>{
-    let mut channel = ChannelWriterBuilder::new().build();
+    let mut channel = ChannelWriter::builder().build();
     //let (channel_address, announce_id) = channels.open().await?;
     let (channel_address, announce_id, state_msg_id) = channel.open_and_save(channel_psw).await?;
     println!("Channel: {}:{}", &channel_address, &announce_id);
@@ -118,7 +117,7 @@ async fn test_restore_channel_from_tangle(channel: &str, announce: &str, key: &[
 async fn test_receive_messages(channel_id: &str, announce_id: &str, psw: &str, key: &[u8; 32], nonce: &[u8; 24]) -> Result<Vec<u8>>{
     let key_nonce = Some((key.clone(), nonce.clone()));
 
-    let mut reader = ChannelReaderBuilder::new().build(channel_id, announce_id);
+    let mut reader = ChannelReader::builder().build(channel_id, announce_id);
     reader.attach().await?;
     println!("Announce Received");
 

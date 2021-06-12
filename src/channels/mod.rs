@@ -5,4 +5,4 @@ mod tangle_channel_reader;
 pub use tangle_channel_reader::ChannelReader;
 
 pub mod channel_state;
-pub mod builders;
+mod builders;

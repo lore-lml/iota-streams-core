@@ -14,6 +14,7 @@ use crate::payload::payload_serializers::RawPacket;
 use crate::channels::channel_state::ChannelState;
 use iota_streams::app::transport::tangle::client::SendOptions;
 use crate::user_builders::subscriber_builder::SubscriberBuilder;
+use crate::channels::builders::channel_builders::ChannelReaderBuilder;
 
 ///
 /// Channel Reader
@@ -26,6 +27,14 @@ pub struct ChannelReader {
 }
 
 impl ChannelReader {
+
+    ///
+    /// Gets the builder of the ChannelReader
+    ///
+    pub fn builder() -> ChannelReaderBuilder{
+        ChannelReaderBuilder::new()
+    }
+
     ///
     /// Initialize the Channel Reader
     ///

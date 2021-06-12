@@ -13,6 +13,7 @@ use crate::user_builders::author_builder::AuthorBuilder;
 use crate::utility::iota_utility::{create_link, hash_string, msg_index};
 use crate::user_builders::subscriber_builder::SubscriberBuilder;
 use iota_streams::app_channels::api::tangle::MessageContent;
+use crate::channels::builders::channel_builders::ChannelWriterBuilder;
 
 ///
 /// Channel
@@ -25,6 +26,14 @@ pub struct ChannelWriter {
 }
 
 impl ChannelWriter {
+
+    ///
+    /// Gets the builder of the ChannelWriter
+    ///
+    pub fn builder() -> ChannelWriterBuilder{
+        ChannelWriterBuilder::new()
+    }
+
     ///
     /// Initialize the Channel
     ///
