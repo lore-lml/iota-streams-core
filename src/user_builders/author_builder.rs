@@ -1,19 +1,15 @@
 use iota_streams::app::transport::{
     TransportOptions,
-    tangle::{
-        client::{Client as StreamsClient, SendOptions},
-        PAYLOAD_BYTES
-    }
+    tangle::client::{Client as StreamsClient, SendOptions}
 };
 use iota_streams::app_channels::api::tangle::Author;
 use crate::utility::iota_utility::{random_seed, hash_string};
 use anyhow::Result;
+use iota_streams::app_channels::api::ChannelType;
 
 pub struct AuthorBuilder{
     seed: String,
     node_url: String,
-    encoding: String,
-    //multi_branching: bool,
     send_options: SendOptions
 }
 
@@ -25,8 +21,6 @@ impl AuthorBuilder{
         AuthorBuilder{
             seed: random_seed(),
             node_url: "https://api.lb-0.testnet.chrysalis2.com".to_string(),
-            encoding: "utf-8".to_string(),
-            //multi_branching: false,
             send_options: send_opts
         }
     }
@@ -67,11 +61,6 @@ impl AuthorBuilder{
         self
     }
 
-    pub fn encoding(mut self, encoding: &str) -> Self{
-        self.encoding = encoding.to_string();
-        self
-    }
-
     pub fn send_options(mut self, send_options: SendOptions) -> Self{
         self.send_options = send_options;
         self
@@ -80,11 +69,11 @@ impl AuthorBuilder{
     pub fn build(self) -> Author<StreamsClient>{
         let mut client = StreamsClient::new_from_url(&self.node_url);
         client.set_send_options(self.send_options);
-        Author::new(&self.seed,
-                    &self.encoding,
-                    PAYLOAD_BYTES,
-                    false,
-                    //self.multi_branching,
-                    client)
+
+        Author::new(
+            &self.seed,
+            ChannelType::SingleBranch,
+            client
+        )
     }
 }

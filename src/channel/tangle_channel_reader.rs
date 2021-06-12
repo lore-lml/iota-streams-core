@@ -9,8 +9,11 @@ use iota_streams::app::message::HasLink;
 use iota_streams::app_channels::api::tangle::MessageContent;
 
 use crate::payload::payload_types::{StreamsPacket, StreamsPacketSerializer};
-use crate::utility::iota_utility::{create_link, msg_index};
+use crate::utility::iota_utility::{create_link, msg_index, hash_string};
 use crate::payload::payload_serializers::RawPacket;
+use crate::channel::channel_state::ChannelState;
+use iota_streams::app::transport::tangle::client::SendOptions;
+use crate::user_builders::subscriber_builder::SubscriberBuilder;
 
 ///
 /// Channel Reader
@@ -36,13 +39,30 @@ impl ChannelReader {
     }
 
     ///
+    /// Restore the channel from a previously stored byte array state
+    ///
+    pub fn import_from_bytes(state: &[u8], psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelReader>{
+        let channel_state = ChannelState::decrypt(&state, &psw)?;
+        let channel = ChannelReader::import(&channel_state, psw, node_url, send_options)?;
+        Ok(channel)
+    }
+
+    ///
+    /// Export the channel state into an encrypted byte array.
+    ///
+    pub fn export_to_bytes(&self, psw: &str)-> Result<Vec<u8>>{
+        let channel_state = self.export(psw)?;
+        channel_state.encrypt(psw)
+    }
+
+    ///
     /// Attach the Reader to Channel
     ///
     pub async fn attach(&mut self) -> Result<()> {
         let link = create_link(&self.channel_address, &self.announcement_id)?;
         self.subscriber.receive_announcement(&link).await?;
 
-        if self.fetch_next_msgs().await == 0{
+        if !self.fetch_next_msgs().await{
             return Ok(());
         }
 
@@ -106,8 +126,10 @@ impl ChannelReader {
     /// It returns a Vector of Tuple containing (msg_id, public_bytes, masked_bytes)
     ///
     pub async fn fetch_raw_msgs(&mut self) -> Vec<(String, Vec<u8>, Vec<u8>)> {
-        while self.fetch_next_msgs().await > 0 {};
-        self.unread_msgs.clone()
+        self.fetch_next_msgs().await;
+        let res = self.unread_msgs.clone();
+        self.unread_msgs = Vec::new();
+        res
     }
 
     ///
@@ -120,13 +142,14 @@ impl ChannelReader {
     where
         T: StreamsPacketSerializer
     {
-        while self.fetch_next_msgs().await > 0 {};
+        self.fetch_next_msgs().await;
 
         let mut res = vec![];
         for (id, p, m) in &self.unread_msgs {
             res.push((id.clone(), StreamsPacket::from_streams_response(p, m, key_nonce)?));
         }
 
+        self.unread_msgs = Vec::new();
         Ok(res)
     }
 
@@ -147,19 +170,43 @@ impl ChannelReader {
 }
 
 impl ChannelReader{
-    async fn fetch_next_msgs(&mut self) -> u8{
-        let mut found = 0;
-        let msgs = self.subscriber.fetch_next_msgs().await;
+
+    fn import(channel_state: &ChannelState, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelReader>{
+        let subscriber = SubscriberBuilder::build_from_state(
+            &channel_state.user_state(),
+            psw,
+            node_url,
+            send_options
+        )?;
+        let channel_address = subscriber.channel_address().unwrap().to_string();
+
+        Ok(ChannelReader {
+            subscriber,
+            channel_address,
+            announcement_id: channel_state.announcement_id(),
+            unread_msgs: Vec::new(),
+        })
+    }
+
+    fn export(&self, psw: &str) -> Result<ChannelState>{
+        let psw_hash = hash_string(psw);
+        let author_state = self.subscriber.export(&psw_hash)?;
+        Ok(ChannelState::new(&author_state, &self.channel_address, &self.announcement_id, ""))
+    }
+
+    async fn fetch_next_msgs(&mut self) -> bool{
+        let msgs = self.subscriber.fetch_all_next_msgs().await;
+        let mut found = false;
         for msg in msgs {
             let link = msg.link.rel();
             match msg.body{
                 MessageContent::SignedPacket {pk: _, public_payload, masked_payload } => {
-                    found += 1;
                     let p = public_payload.0;
                     let m = masked_payload.0;
 
                     if !p.is_empty() || !m.is_empty(){
                         self.unread_msgs.push((link.to_string(), p, m));
+                        found = true;
                     }
                 }
                 _ => {println!("{}", link.to_string());}

@@ -188,7 +188,7 @@ impl ChannelWriter{
 
     fn import(channel_state: &ChannelState, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
         let author = AuthorBuilder::build_from_state(
-            &channel_state.author_state(),
+            &channel_state.user_state(),
             psw,
             node_url,
             send_options
@@ -206,7 +206,7 @@ impl ChannelWriter{
     fn export(&self, psw: &str) -> Result<ChannelState>{
         let psw_hash = hash_string(psw);
         let author_state = self.author.export(&psw_hash)?;
-        Ok(ChannelState::new(&author_state, &self.announcement_id, &self.last_msg_id))
+        Ok(ChannelState::new(&author_state, &self.channel_address, &self.announcement_id, &self.last_msg_id))
     }
 
     async fn check_state(channel_id: &str, announce_id: &str, node_url: Option<&str>) -> Result<Vec<u8>>{

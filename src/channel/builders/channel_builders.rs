@@ -27,11 +27,6 @@ impl ChannelWriterBuilder{
         self
     }
 
-    pub fn encoding(mut self, encoding: &str) -> Self{
-        self.author_builder = self.author_builder.encoding(encoding);
-        self
-    }
-
     pub fn send_options(mut self, send_options: SendOptions) -> Self{
         self.author_builder = self.author_builder.send_options(send_options);
         self
@@ -62,11 +57,6 @@ impl ChannelReaderBuilder{
 
     pub fn node(mut self, node_url: &str) -> Self{
         self.subscriber_builder = self.subscriber_builder.node(node_url);
-        self
-    }
-
-    pub fn encoding(mut self, encoding: &str) -> Self{
-        self.subscriber_builder = self.subscriber_builder.encoding(encoding);
         self
     }
 

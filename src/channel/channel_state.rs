@@ -12,15 +12,17 @@ use crate::utility::iota_utility::hash_string;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ChannelState{
-    author_state: Vec<u8>,
+    user_state: Vec<u8>,
+    channel_id: String,
     announcement_id: String,
     last_msg_id: String,
 }
 
 impl ChannelState {
-    pub fn new(author_state: &Vec<u8>, announcement_id: &str, last_public_msg: &str) -> ChannelState{
+    pub fn new(author_state: &Vec<u8>, channel_id: &str, announcement_id: &str, last_public_msg: &str) -> ChannelState{
         ChannelState{
-            author_state: author_state.clone(),
+            user_state: author_state.clone(),
+            channel_id: channel_id.to_string(),
             announcement_id: announcement_id.to_string(),
             last_msg_id: last_public_msg.to_string(),
         }
@@ -46,8 +48,11 @@ impl ChannelState{
         Ok(())
     }
 
-    pub fn author_state(&self) -> Vec<u8> {
-        self.author_state.clone()
+    pub fn user_state(&self) -> Vec<u8> {
+        self.user_state.clone()
+    }
+    pub fn channel_id(&self) -> String {
+        self.channel_id.to_string()
     }
     pub fn announcement_id(&self) -> String {
         self.announcement_id.clone()
