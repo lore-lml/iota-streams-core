@@ -11,7 +11,7 @@ use iota_streams::app_channels::api::tangle::MessageContent;
 use crate::payload::payload_types::{StreamsPacket, StreamsPacketSerializer};
 use crate::utility::iota_utility::{create_link, msg_index, hash_string};
 use crate::payload::payload_serializers::RawPacket;
-use crate::channel::channel_state::ChannelState;
+use crate::channels::channel_state::ChannelState;
 use iota_streams::app::transport::tangle::client::SendOptions;
 use crate::user_builders::subscriber_builder::SubscriberBuilder;
 
@@ -39,7 +39,7 @@ impl ChannelReader {
     }
 
     ///
-    /// Restore the channel from a previously stored byte array state
+    /// Restore the channels from a previously stored byte array state
     ///
     pub fn import_from_bytes(state: &[u8], psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelReader>{
         let channel_state = ChannelState::decrypt(&state, &psw)?;
@@ -48,7 +48,7 @@ impl ChannelReader {
     }
 
     ///
-    /// Export the channel state into an encrypted byte array.
+    /// Export the channels state into an encrypted byte array.
     ///
     pub fn export_to_bytes(&self, psw: &str)-> Result<Vec<u8>>{
         let channel_state = self.export(psw)?;
@@ -85,7 +85,7 @@ impl ChannelReader {
     }
 
     ///
-    /// Send a subscription to a channel for future private communications
+    /// Send a subscription to a channels for future private communications
     ///
     pub async fn send_subscription(&mut self) -> Result<String>{
         let link = create_link(&self.channel_address, &self.announcement_id)?;
@@ -154,7 +154,7 @@ impl ChannelReader {
     }
 
     ///
-    /// Get the channel address and the announcement id
+    /// Get the channels address and the announcement id
     ///
     pub fn channel_address(&self) -> (String, String){
         (self.channel_address.clone(), self.announcement_id.clone())

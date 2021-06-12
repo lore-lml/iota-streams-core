@@ -1,8 +1,7 @@
 use crate::user_builders::author_builder::AuthorBuilder;
 use iota_streams::app::transport::tangle::client::SendOptions;
-use crate::channel::tangle_channel_writer::ChannelWriter;
+use crate::channels::{ChannelReader, ChannelWriter};
 use crate::user_builders::subscriber_builder::SubscriberBuilder;
-use crate::channel::tangle_channel_reader::ChannelReader;
 
 
 pub struct ChannelWriterBuilder{

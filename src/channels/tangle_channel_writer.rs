@@ -6,7 +6,7 @@ use iota_streams::{
     app_channels::api::tangle::Author,
 };
 
-use crate::channel::channel_state::ChannelState;
+use crate::channels::channel_state::ChannelState;
 use crate::payload::payload_serializers::{RawPacketBuilder, RawPacket};
 use crate::payload::payload_types::{StreamsPacket, StreamsPacketSerializer};
 use crate::user_builders::author_builder::AuthorBuilder;
@@ -39,7 +39,7 @@ impl ChannelWriter {
     }
 
     ///
-    /// Restore the channel from a previously stored byte array state
+    /// Restore the channels from a previously stored byte array state
     ///
     pub async fn import_from_bytes(state: &[u8], psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
         let channel_state = ChannelState::decrypt(&state, &psw)?;
@@ -49,7 +49,7 @@ impl ChannelWriter {
     }
 
     ///
-    /// Restore the channel from a previously stored state in a file
+    /// Restore the channels from a previously stored state in a file
     ///
     pub async fn import_from_file(file_path: &str, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
         let channel_state = ChannelState::from_file(file_path, &psw)?;
@@ -61,12 +61,12 @@ impl ChannelWriter {
     pub async fn import_from_tangle(channel_id: &str, announce_id: &str, state_psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
         match ChannelWriter::check_state(channel_id, announce_id, node_url).await{
             Ok(state) => ChannelWriter::import_from_bytes(&state, state_psw, node_url, send_options).await,
-            Err(_) => Err(anyhow::Error::msg("There is no state in the channel"))
+            Err(_) => Err(anyhow::Error::msg("There is no state in the channels"))
         }
     }
 
     ///
-    /// Open a channel
+    /// Open a channels
     ///
     pub async fn open(&mut self) -> Result<(String, String)> {
         let announce = self.author.send_announce().await?;
@@ -78,7 +78,7 @@ impl ChannelWriter {
     }
 
     ///
-    /// Open a channel and save as first message the encrypted state of the channel itself
+    /// Open a channels and save as first message the encrypted state of the channels itself
     ///
     pub async fn open_and_save(&mut self, state_psw: &str) -> Result<(String, String, String)>{
         let res = self.open().await?;
@@ -141,7 +141,7 @@ impl ChannelWriter {
     }
 
     ///
-    /// Export the channel state into an encrypted byte array.
+    /// Export the channels state into an encrypted byte array.
     ///
     pub fn export_to_bytes(&self, psw: &str)-> Result<Vec<u8>>{
         let channel_state = self.export(psw)?;
@@ -149,7 +149,7 @@ impl ChannelWriter {
     }
 
     ///
-    /// Stores the channel state in a file. The author state is encrypted with the specified password
+    /// Stores the channels state in a file. The author state is encrypted with the specified password
     ///
     pub fn export_to_file(&self, psw: &str, file_path: &str)-> Result<()>{
         let channel_state = self.export(psw)?;
@@ -158,7 +158,7 @@ impl ChannelWriter {
     }
 
     ///
-    /// Get the channel address and the announcement id
+    /// Get the channels address and the announcement id
     ///
     pub fn channel_address(&self) -> (String, String){
         (self.channel_address.clone(), self.announcement_id.clone())
@@ -216,7 +216,7 @@ impl ChannelWriter{
         };
         subscriber.receive_announcement(&create_link(channel_id, announce_id)?).await?;
         match subscriber.fetch_next_msgs().await.pop(){
-            None => return Err(anyhow::Error::msg("There is no state in the channel")),
+            None => return Err(anyhow::Error::msg("There is no state in the channels")),
             Some(m) => {
                 match m.body{
                     MessageContent::SignedPacket { public_payload, masked_payload, .. } => {
@@ -224,11 +224,11 @@ impl ChannelWriter{
                         let (public, masked): (String, Vec<u8>) = RawPacket::from_streams_response(&public_payload.0, &masked_payload.0, &None)?
                             .deserialize()?;
                         if public != comp{
-                            return Err(anyhow::Error::msg("There is no state in the channel"))
+                            return Err(anyhow::Error::msg("There is no state in the channels"))
                         }
                         Ok(masked)
                     }
-                    _ => return Err(anyhow::Error::msg("There is no state in the channel"))
+                    _ => return Err(anyhow::Error::msg("There is no state in the channels"))
                 }
             }
         }

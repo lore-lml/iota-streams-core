@@ -7,7 +7,7 @@ unstable_features
 )]
 #![cfg_attr(not(debug_assertions), deny(warnings))]
 
-pub mod channel;
+pub mod channels;
 pub mod payload;
 pub mod utility;
 pub mod user_builders;

@@ -4,11 +4,10 @@ use std::time::SystemTime;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use iota_streams_lib::channel::tangle_channel_writer::ChannelWriter;
+use iota_streams_lib::channels::{ChannelWriter, ChannelReader};
 use iota_streams_lib::payload::payload_serializers::{JsonPacketBuilder, JsonPacket};
 use iota_streams_lib::utility::iota_utility::{create_encryption_key, create_encryption_nonce};
-use iota_streams_lib::channel::builders::channel_builders::{ChannelWriterBuilder, ChannelReaderBuilder};
-use iota_streams_lib::channel::tangle_channel_reader::ChannelReader;
+use iota_streams_lib::channels::builders::channel_builders::{ChannelWriterBuilder, ChannelReaderBuilder};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Message {
@@ -67,7 +66,7 @@ USE https://chrysalis-nodes.iota.cafe/ for a node of the new chrysalis mainnet
 */
 async fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<(String, String)>{
     let mut channel = ChannelWriterBuilder::new().build();
-    //let (channel_address, announce_id) = channel.open().await?;
+    //let (channel_address, announce_id) = channels.open().await?;
     let (channel_address, announce_id, state_msg_id) = channel.open_and_save(channel_psw).await?;
     println!("Channel: {}:{}", &channel_address, &announce_id);
     println!("State Msg ID: {}", state_msg_id);
@@ -78,14 +77,14 @@ async fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str
         send_signed_message(&mut channel, &device, key, nonce).await;
     }
 
-    channel.export_to_file(channel_psw, "example/channel.state")?;
+    channel.export_to_file(channel_psw, "example/channels.state")?;
     Ok((channel_address, announce_id))
 }
 
 async fn test_restore_channel(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str) -> Result<()>{
     println!("Restoring Channel ...");
     let mut channel = ChannelWriter::import_from_file(
-        "example/channel.state",
+        "example/channels.state",
         channel_psw,
         None,
         None
