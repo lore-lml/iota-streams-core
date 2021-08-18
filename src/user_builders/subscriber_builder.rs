@@ -4,6 +4,7 @@ use iota_streams::app::transport::{
 };
 use crate::utility::iota_utility::{random_seed, hash_string};
 use iota_streams::app_channels::api::tangle::Subscriber;
+use iota_streams::app::transport::tangle::PAYLOAD_BYTES;
 
 pub struct SubscriberBuilder{
     seed: String,
@@ -76,6 +77,8 @@ impl SubscriberBuilder{
         client.set_send_options(self.send_options);
         Subscriber::new(
             &self.seed,
+            "utf-8",
+            PAYLOAD_BYTES,
             client
         )
     }

@@ -5,7 +5,7 @@ use iota_streams::app::transport::{
 use iota_streams::app_channels::api::tangle::Author;
 use crate::utility::iota_utility::{random_seed, hash_string};
 use anyhow::Result;
-use iota_streams::app_channels::api::ChannelType;
+use iota_streams::app::transport::tangle::PAYLOAD_BYTES;
 
 pub struct AuthorBuilder{
     seed: String,
@@ -72,7 +72,9 @@ impl AuthorBuilder{
 
         Author::new(
             &self.seed,
-            ChannelType::SingleBranch,
+            "utf-8",
+            PAYLOAD_BYTES,
+            false,
             client
         )
     }

@@ -15,7 +15,7 @@ members = ["example",]
 
 [dependencies]
 anyhow = { version = "1.0", default-features = false }
-iota-streams = { git = "https://github.com/iotaledger/streams", branch = "develop", features = ["tangle", "async"]}
+iota-streams = { git = "https://github.com/lore-lml/streams-1.1.0.git", features = ["tangle", "async"]}
 iota-crypto = { git = "https://github.com/iotaledger/crypto.rs", branch = "dev", features = ["blake2b"]}
 chacha20poly1305 = "0.7.1"
 aead = "0.4.0"
