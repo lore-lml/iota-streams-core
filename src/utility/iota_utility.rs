@@ -10,6 +10,7 @@ use crypto::hashes::{
     Digest,
     blake2b::Blake2b256
 };
+use std::str::FromStr;
 
 ///
 /// Generates a new random String of 81 Chars of A..Z and 9
@@ -39,7 +40,7 @@ pub fn hash_string(string: &str) -> String{
 }
 
 pub fn create_link(channel_address: &str, msg_id: &str) -> Result<Address>{
-    match Address::from_str(channel_address, msg_id) {
+    match Address::from_str(&format!("{}:{}", channel_address, msg_id)) {
         Ok(link) => Ok(link),
         Err(e) => Err(anyhow::anyhow!(e))
     }
