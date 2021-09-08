@@ -76,7 +76,7 @@ async fn test_channel_create(key: &[u8; 32], nonce: &[u8; 24], channel_psw: &str
         send_signed_message(&mut channel, &device, key, nonce).await;
     }
 
-    channel.export_to_file(channel_psw, "example/channels.state")?;
+    channel.export_to_file(channel_psw, "example/channels.state").await?;
     Ok((channel_address, announce_id))
 }
 
@@ -122,13 +122,13 @@ async fn test_receive_messages(channel_id: &str, announce_id: &str, psw: &str, k
     println!("Announce Received");
 
     print_msgs(&mut reader, key_nonce).await?;
-    reader.export_to_bytes(psw)
+    reader.export_to_bytes(psw).await
 }
 
 async fn test_restore_reader(state: &[u8], psw: &str, key: &[u8; 32], nonce: &[u8; 24]) -> Result<()>{
     let key_nonce = Some((key.clone(), nonce.clone()));
     println!("Restoring reader ...");
-    let mut reader = ChannelReader::import_from_bytes(state, psw, None, None)?;
+    let mut reader = ChannelReader::import_from_bytes(state, psw, None, None).await?;
     println!("... Reader restored");
     print_msgs(&mut reader, key_nonce).await
 }

@@ -52,7 +52,7 @@ impl ChannelWriter {
     ///
     pub async fn import_from_bytes(state: &[u8], psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
         let channel_state = ChannelState::decrypt(&state, &psw)?;
-        let mut channel = ChannelWriter::import(&channel_state, psw, node_url, send_options)?;
+        let mut channel = ChannelWriter::import(&channel_state, psw, node_url, send_options).await?;
         channel.check_update_state().await;
         Ok(channel)
     }
@@ -62,7 +62,7 @@ impl ChannelWriter {
     ///
     pub async fn import_from_file(file_path: &str, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
         let channel_state = ChannelState::from_file(file_path, &psw)?;
-        let mut channel = ChannelWriter::import(&channel_state, psw, node_url, send_options)?;
+        let mut channel = ChannelWriter::import(&channel_state, psw, node_url, send_options).await?;
         channel.check_update_state().await;
         Ok(channel)
     }
@@ -93,7 +93,7 @@ impl ChannelWriter {
         let res = self.open().await?;
 
         let public = format!("{}:{}.state", self.channel_address, self.announcement_id).as_bytes().to_vec();
-        let masked = self.export_to_bytes(state_psw)?;
+        let masked = self.export_to_bytes(state_psw).await?;
 
         let state_msg_id = self.send_signed_raw_data(public, masked, None).await?;
 
@@ -152,16 +152,16 @@ impl ChannelWriter {
     ///
     /// Export the channels state into an encrypted byte array.
     ///
-    pub fn export_to_bytes(&self, psw: &str)-> Result<Vec<u8>>{
-        let channel_state = self.export(psw)?;
+    pub async fn export_to_bytes(&self, psw: &str)-> Result<Vec<u8>>{
+        let channel_state = self.export(psw).await?;
         channel_state.encrypt(psw)
     }
 
     ///
     /// Stores the channels state in a file. The author state is encrypted with the specified password
     ///
-    pub fn export_to_file(&self, psw: &str, file_path: &str)-> Result<()>{
-        let channel_state = self.export(psw)?;
+    pub async fn export_to_file(&self, psw: &str, file_path: &str)-> Result<()>{
+        let channel_state = self.export(psw).await?;
         channel_state.write_to_file(file_path, psw)?;
         Ok(())
     }
@@ -195,13 +195,13 @@ impl ChannelWriter{
         }
     }
 
-    fn import(channel_state: &ChannelState, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
+    async fn import(channel_state: &ChannelState, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelWriter>{
         let author = AuthorBuilder::build_from_state(
             &channel_state.user_state(),
             psw,
             node_url,
             send_options
-        )?;
+        ).await?;
         let channel_address = author.channel_address().unwrap().to_string();
 
         Ok(ChannelWriter {
@@ -212,9 +212,9 @@ impl ChannelWriter{
         })
     }
 
-    fn export(&self, psw: &str) -> Result<ChannelState>{
+    async fn export(&self, psw: &str) -> Result<ChannelState>{
         let psw_hash = hash_string(psw);
-        let author_state = self.author.export(&psw_hash)?;
+        let author_state = self.author.export(&psw_hash).await?;
         Ok(ChannelState::new(&author_state, &self.channel_address, &self.announcement_id, &self.last_msg_id))
     }
 

@@ -25,7 +25,7 @@ impl AuthorBuilder{
         }
     }
 
-    pub fn build_from_state(author_state: &[u8],
+    pub async fn build_from_state(author_state: &[u8],
                             psw: &str,
                             node_url: Option<&str>,
                             send_option: Option<SendOptions>) -> Result<Author<StreamsClient>>{
@@ -46,7 +46,7 @@ impl AuthorBuilder{
 
         let mut client = StreamsClient::new_from_url(&node);
         client.set_send_options(options);
-        Author::import(author_state, &psw_hash, client)
+        Author::import(author_state, &psw_hash, client).await
     }
 }
 

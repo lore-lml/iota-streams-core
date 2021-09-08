@@ -50,17 +50,17 @@ impl ChannelReader {
     ///
     /// Restore the channels from a previously stored byte array state
     ///
-    pub fn import_from_bytes(state: &[u8], psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelReader>{
+    pub async fn import_from_bytes(state: &[u8], psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelReader>{
         let channel_state = ChannelState::decrypt(&state, &psw)?;
-        let channel = ChannelReader::import(&channel_state, psw, node_url, send_options)?;
+        let channel = ChannelReader::import(&channel_state, psw, node_url, send_options).await?;
         Ok(channel)
     }
 
     ///
     /// Export the channels state into an encrypted byte array.
     ///
-    pub fn export_to_bytes(&self, psw: &str)-> Result<Vec<u8>>{
-        let channel_state = self.export(psw)?;
+    pub async fn export_to_bytes(&self, psw: &str)-> Result<Vec<u8>>{
+        let channel_state = self.export(psw).await?;
         channel_state.encrypt(psw)
     }
 
@@ -180,13 +180,13 @@ impl ChannelReader {
 
 impl ChannelReader{
 
-    fn import(channel_state: &ChannelState, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelReader>{
+    async fn import(channel_state: &ChannelState, psw: &str, node_url: Option<&str>, send_options: Option<SendOptions>) -> Result<ChannelReader>{
         let subscriber = SubscriberBuilder::build_from_state(
             &channel_state.user_state(),
             psw,
             node_url,
             send_options
-        )?;
+        ).await?;
         let channel_address = subscriber.channel_address().unwrap().to_string();
 
         Ok(ChannelReader {
@@ -197,9 +197,9 @@ impl ChannelReader{
         })
     }
 
-    fn export(&self, psw: &str) -> Result<ChannelState>{
+    async fn export(&self, psw: &str) -> Result<ChannelState>{
         let psw_hash = hash_string(psw);
-        let author_state = self.subscriber.export(&psw_hash)?;
+        let author_state = self.subscriber.export(&psw_hash).await?;
         Ok(ChannelState::new(&author_state, &self.channel_address, &self.announcement_id, ""))
     }
 
