@@ -20,7 +20,7 @@ impl AuthorBuilder{
 
         AuthorBuilder{
             seed: random_seed(),
-            node_url: "https://api.lb-0.testnet.chrysalis2.com".to_string(),
+            node_url: "https://api.lb-0.h.chrysalis-devnet.iota.cafe/".to_string(),
             send_options: send_opts
         }
     }
@@ -33,7 +33,7 @@ impl AuthorBuilder{
         let psw_hash = hash_string(psw);
         let node = match node_url {
             Some(url) => url,
-            None => "https://api.lb-0.testnet.chrysalis2.com"
+            None => "https://api.lb-0.h.chrysalis-devnet.iota.cafe/"
         };
         let options = match send_option {
             Some(so) => so,
